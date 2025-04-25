@@ -6,10 +6,12 @@ import { AuthGuard } from './guard/auth.guard';
 import { OrderComponent } from './components/order/order.component';
 import { ProductComponent } from './components/product/product.component';
 import { OrderDetailComponent } from './components/order-detail/order-detail.component';
+import { HomeComponent } from './components/home/home.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: 'login', component: LoginComponent, pathMatch: 'full' },
+    { path: 'home', component: HomeComponent, canActivate: [AuthGuard], pathMatch: 'full' },
     { path: 'user', component: UserComponent, canActivate: [AuthGuard], pathMatch: 'full' },
     { path: 'buyer', component: BuyerComponent, canActivate: [AuthGuard], pathMatch: 'full' },
     { path: 'order', component: OrderComponent, canActivate: [AuthGuard], pathMatch: 'full' },

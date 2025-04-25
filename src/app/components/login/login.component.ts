@@ -41,7 +41,7 @@ export class LoginComponent {
           localStorage.setItem('user', JSON.stringify(response.user));
           this.activeButton = false;
           this.loading = false;
-          this._router.navigate(['/admin']);
+          this._router.navigate(['/home']);
         },
         (error) => {
           this.activeButton = false;
