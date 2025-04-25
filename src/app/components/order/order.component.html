@@ -1,4 +1,4 @@
-<!-- Encabezado con botón para crear orden -->
+<app-navbar></app-navbar>
 <div class="w-full bg-gray-100 py-10">
     <div class="max-w-4xl mx-auto text-center px-4">
         <h1 class="text-4xl md:text-5xl font-bold mb-4">Gestión de Órdenes</h1>
@@ -11,16 +11,11 @@
     </div>
 </div>
 
-<!-- Tabla de órdenes -->
 <div class="max-w-6xl mx-auto my-10 px-4" *ngIf="!viewForm">
     <h3 class="text-center text-xl font-bold mb-6">Órdenes Registradas</h3>
-
-    <!-- Cargando -->
     <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
         <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
     </div>
-
-    <!-- Tabla -->
     <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable">
         <table class="min-w-full divide-y divide-gray-200 text-center">
             <thead class="bg-blue-100">
@@ -55,7 +50,6 @@
                 </tr>
             </tbody>
         </table>
-
     </div>
 </div>
 

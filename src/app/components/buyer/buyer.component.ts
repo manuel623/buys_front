@@ -7,11 +7,12 @@ import { ApiResponse, Buyer } from '../../models/buyer/buyer.model';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
+import { NavbarComponent } from "../../shared/navbar/navbar.component";
 
 @Component({
   selector: 'app-buyer',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent],
   templateUrl: './buyer.component.html',
   styleUrl: './buyer.component.css'
 })

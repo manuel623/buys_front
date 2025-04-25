@@ -7,11 +7,12 @@ import { RouterModule } from '@angular/router';
 import { ProductService } from '../../services/product/product.service';
 import { NotificationService } from '../../services/notification/notificacion.service';
 import { IProduct } from '../../models/product/product.model';
+import { NavbarComponent } from '../../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-product',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent],
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.css']
 })

@@ -7,11 +7,12 @@ import { OrderService } from '../../services/order/order.service';
 import { NotificationService } from '../../services/notification/notificacion.service';
 import Swal from 'sweetalert2';
 import { Order, ApiResponse } from '../../models/order/order.model';
+import { NavbarComponent } from '../../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-order',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent],
   templateUrl: './order.component.html',
   styleUrls: ['./order.component.css']
 })
