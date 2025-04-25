@@ -72,7 +72,8 @@
             <input type="text" formControlName="document" placeholder="Número de Documento"
                 class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
                 [ngClass]="{'border-red-500': buyerForm.get('document')?.invalid && (buyerForm.get('document')?.touched || buyerForm.get('document')?.dirty)}">
-            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('document')?.errors?.['required']">El
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('document')?.errors?.['required'] &&
+                       (buyerForm.get('document')?.touched || buyerForm.get('document')?.dirty)">El
                 número de documento es requerido.</p>
         </div>
 
@@ -81,8 +82,10 @@
             <input type="text" formControlName="first_name" placeholder="Primer Nombre"
                 class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
                 [ngClass]="{'border-red-500': buyerForm.get('first_name')?.invalid && (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)}">
-            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required']">El primer
-                nombre es requerido.</p>
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required'] &&
+                       (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)">
+                El primer nombre es requerido.
+            </p>
         </div>
 
         <div class="mb-5">

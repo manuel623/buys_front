@@ -1,1 +1,105 @@
-<p>product works!</p>
+<div class="w-full bg-gray-100 py-10">
+    <div class="max-w-4xl mx-auto text-center px-4">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Gestión de Productos</h1>
+        <p class="text-lg text-gray-600">Gestiona los productos disponibles en la tienda.</p>
+        <button *ngIf="!viewForm"
+            class="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium py-3 px-6 rounded"
+            (click)="viewFormCreate()">
+            <i class="fa-solid fa-plus mr-2"></i> Crear Producto
+        </button>
+    </div>
+</div>
+
+<div class="max-w-6xl mx-auto my-10" *ngIf="!viewForm">
+    <h3 class="text-center text-xl font-bold mb-6">Productos Registrados</h3>
+
+    <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
+        <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
+    </div>
+
+    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable">
+        <table class="min-w-full divide-y divide-gray-200 text-center">
+            <thead class="bg-blue-100">
+                <tr>
+                    <th class="py-3 px-4 font-semibold">Nombre</th>
+                    <th class="py-3 px-4 font-semibold">Descripción</th>
+                    <th class="py-3 px-4 font-semibold">Precio</th>
+                    <th class="py-3 px-4 font-semibold">Stock</th>
+                    <th class="py-3 px-4 font-semibold">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+                <tr *ngIf="dataProduct.length === 0">
+                    <td colspan="5" class="py-4 text-gray-500">No hay productos registrados.</td>
+                </tr>
+                <tr *ngFor="let item of dataProduct">
+                    <td class="py-3 px-4">{{ item.name }}</td>
+                    <td class="py-3 px-4">{{ item.description || 'No disponible' }}</td>
+                    <td class="py-3 px-4">${{ item.price | number: '1.2-2' }}</td>
+                    <td class="py-3 px-4">{{ item.stock }}</td>
+                    <td class="py-3 px-4 space-x-2">
+                        <button
+                            class="text-yellow-600 border border-yellow-400 hover:bg-yellow-100 px-3 py-1 rounded text-sm"
+                            (click)="editViewProduct(item.id)">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+                        </button>
+                        <button class="text-red-600 border border-red-500 hover:bg-red-100 px-3 py-1 rounded text-sm"
+                            (click)="deleteProduct(item.id)">
+                            <i class="fa-solid fa-delete-left fa-flip-vertical mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
+    <form [formGroup]="productForm" (ngSubmit)="submitForm()" class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-bold mb-6">Formulario de Producto</h3>
+
+        <div class="mb-5">
+            <label for="name" class="block font-medium mb-1">Nombre del Producto</label>
+            <input type="text" formControlName="name" placeholder="Nombre del Producto"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': productForm.get('name')?.invalid && (productForm.get('name')?.touched || productForm.get('name')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="productForm.get('name')?.errors?.['required'] &&
+                       (productForm.get('name')?.touched || productForm.get('name')?.dirty)">El nombre del
+                producto es requerido.</p>
+        </div>
+
+        <div class="mb-5">
+            <label for="description" class="block font-medium mb-1">Descripción</label>
+            <textarea formControlName="description" placeholder="Descripción del Producto"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"></textarea>
+        </div>
+
+        <div class="mb-5">
+            <label for="price" class="block font-medium mb-1">Precio</label>
+            <input type="number" formControlName="price" placeholder="Precio del Producto"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': productForm.get('price')?.invalid && (productForm.get('price')?.touched || productForm.get('price')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="productForm.get('price')?.errors?.['required'] &&
+                       (productForm.get('price')?.touched || productForm.get('price')?.dirty)">El precio es
+                requerido.</p>
+        </div>
+
+        <div class="mb-5">
+            <label for="stock" class="block font-medium mb-1">Stock</label>
+            <input type="number" formControlName="stock" placeholder="Cantidad en Stock"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': productForm.get('stock')?.invalid && (productForm.get('stock')?.touched || productForm.get('stock')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="productForm.get('stock')?.errors?.['required'] &&
+                       (productForm.get('stock')?.touched || productForm.get('stock')?.dirty)">La cantidad en
+                stock es requerida.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button" (click)="goBack()"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-5 rounded-lg">Volver</button>
+            <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded-lg disabled:opacity-50"
+                [disabled]="productForm.invalid">Guardar</button>
+        </div>
+    </form>
+</div>

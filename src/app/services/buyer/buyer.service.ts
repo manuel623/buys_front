@@ -19,8 +19,8 @@ export class BuyerService {
         return this.http.get<any>(`${this.apiUrl}/buyer/listBuyer`, this.header.getHttpOptions());
     }
 
-    getBuyerByPhone(phone: string): Observable<any> {
-        return this.http.get<any>(`${this.apiUrl}/buyer/getBuyerByPhone/` + phone, this.header.getHttpOptions());
+    getBuyerByDocument(document: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/buyer/getBuyerByDocument/` + document, this.header.getHttpOptions());
     }
 
     createBuyer(data: any): Observable<any> {
