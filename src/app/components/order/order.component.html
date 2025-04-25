@@ -1,1 +1,112 @@
-<p>order works!</p>
+<!-- Encabezado con botón para crear orden -->
+<div class="w-full bg-gray-100 py-10">
+    <div class="max-w-4xl mx-auto text-center px-4">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Gestión de Órdenes</h1>
+        <p class="text-lg text-gray-600">Administra las órdenes de compra realizadas por los usuarios.</p>
+        <button *ngIf="!viewForm"
+            class="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium py-3 px-6 rounded"
+            (click)="viewFormCreate()">
+            <i class="fa-solid fa-plus mr-2"></i> Crear Orden
+        </button>
+    </div>
+</div>
+
+<!-- Tabla de órdenes -->
+<div class="max-w-6xl mx-auto my-10 px-4" *ngIf="!viewForm">
+    <h3 class="text-center text-xl font-bold mb-6">Órdenes Registradas</h3>
+
+    <!-- Cargando -->
+    <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
+        <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
+    </div>
+
+    <!-- Tabla -->
+    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable">
+        <table class="min-w-full divide-y divide-gray-200 text-center">
+            <thead class="bg-blue-100">
+                <tr>
+                    <th class="py-3 px-4 font-semibold">ID</th>
+                    <th class="py-3 px-4 font-semibold">Medio de Pago</th>
+                    <th class="py-3 px-4 font-semibold">Fecha</th>
+                    <th class="py-3 px-4 font-semibold">Total</th>
+                    <th class="py-3 px-4 font-semibold">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+                <tr *ngIf="dataOrder.length === 0">
+                    <td colspan="5" class="py-4 text-gray-500">No hay órdenes registradas.</td>
+                </tr>
+                <tr *ngFor="let item of dataOrder">
+                    <td class="py-3 px-4">{{ item.id }}</td>
+                    <td class="py-3 px-4">{{ item.payment_method }}</td>
+                    <td class="py-3 px-4">{{ item.billing_date | date: 'shortDate' }}</td>
+                    <td class="py-3 px-4">${{ item.total | number: '1.2-2' }}</td>
+                    <td class="py-3 px-4 space-x-2">
+                        <button
+                            class="text-yellow-600 border border-yellow-400 hover:bg-yellow-100 px-3 py-1 rounded text-sm"
+                            (click)="editViewOrder(item.id)">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+                        </button>
+                        <button class="text-red-600 border border-red-500 hover:bg-red-100 px-3 py-1 rounded text-sm"
+                            (click)="deleteOrder(item.id)">
+                            <i class="fa-solid fa-delete-left fa-flip-vertical mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<!-- Formulario de orden -->
+<div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
+    <form [formGroup]="orderForm" (ngSubmit)="submitForm()" class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-bold mb-6">Formulario de Orden</h3>
+
+        <div class="mb-5">
+            <label class="block font-medium mb-1">Comprador</label>
+            <input formControlName="description" type="text" placeholder="Descripción de la Orden"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('description')?.invalid && orderForm.get('description')?.touched}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('description')?.errors?.['required']">
+                La descripción es requerida.
+            </p>
+        </div>
+
+        <div class="mb-5">
+            <label class="block font-medium mb-1">Fecha de Facturación</label>
+            <input formControlName="billing_date" type="date"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('billing_date')?.invalid && orderForm.get('billing_date')?.touched}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('billing_date')?.errors?.['required']">
+                La fecha de facturación es requerida.
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <label class="block font-medium mb-1">Total</label>
+            <input formControlName="total" type="number" placeholder="Total de la Orden"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('total')?.invalid && orderForm.get('total')?.touched}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('total')?.errors?.['required']">
+                El total es requerido.
+            </p>
+        </div>
+
+        <div class="mb-5">
+            <label class="inline-flex items-center">
+                <input formControlName="has_discount" type="checkbox" class="form-checkbox h-5 w-5 text-blue-600">
+                <span class="ml-2 text-sm">Aplicar Descuento</span>
+            </label>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button" (click)="goBack()"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-5 rounded-lg">Volver</button>
+            <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded-lg disabled:opacity-50"
+                [disabled]="orderForm.invalid">Guardar</button>
+        </div>
+    </form>
+</div>
