@@ -53,8 +53,7 @@
     </div>
 </div>
 
-<!-- Formulario de orden -->
-<div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
+<!-- <div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
     <form [formGroup]="orderForm" (ngSubmit)="submitForm()" class="bg-white p-6 rounded-lg shadow-md">
         <h3 class="text-center text-2xl font-bold mb-6">Formulario de Orden</h3>
 
@@ -103,4 +102,123 @@
                 [disabled]="orderForm.invalid">Guardar</button>
         </div>
     </form>
+</div> -->
+
+<div *ngIf="viewForm" class="mx-auto px-4">
+
+    <form [formGroup]="orderForm">
+        <div class="grid grid-cols-12 gap-4 items-center">
+
+            <div class="col-span-2">
+                <label class="text-sm">Nombre del producto</label>
+                <div class="border-2 border-black p-2">
+                    <select formControlName="productId" (change)="handleProductChange($event)"
+                        class="w-full outline-none">
+                        <option value="">Seleccione un producto</option>
+                        <option *ngFor="let product of products" [value]="product.id">
+                            {{ product.name }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-span-2">
+                <label class="text-sm">Valor por unidad</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" formControlName="unitValue" class="w-full outline-none" readonly />
+                </div>
+            </div>
+
+            <div class="col-span-1">
+                <label class="text-sm">Cantidad</label>
+                <div class="border-2 border-black p-2">
+                    <input type="number" formControlName="quantity" (input)="calculateSubtotal()"
+                        class="w-full outline-none" />
+                </div>
+            </div>
+
+            <div class="col-span-2">
+                <label class="text-sm">Descripción</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" formControlName="description" class="w-full outline-none" readonly />
+                </div>
+            </div>
+
+            <div class="col-span-1">
+                <label class="text-sm">Stock</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" formControlName="stock" class="w-full outline-none" readonly />
+                </div>
+            </div>
+
+            <div class="col-span-2">
+                <label class="text-sm">Valor SubTotal</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" formControlName="subtotal" class="w-full outline-none" readonly />
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4 mt-2">
+            <button type="button" class="text-2xl">+</button>
+        </div>
+    </form>
+
+
+    <!-- Subtotal Total -->
+    <div class="flex justify-end">
+        <div class="text-right">
+            <label class="text-sm">SubTotal Total</label>
+            <div class="border-2 border-black p-2 w-32">
+                <input type="text" class="w-full outline-none" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda Parte -->
+    <div class="grid grid-cols-12 gap-6 mt-8">
+
+        <!-- Descripcion de la orden -->
+        <div class="col-span-6">
+            <label class="text-sm">Descripción de la Orden</label>
+            <div class="border-2 border-black p-2 h-60">
+                <textarea class="w-full h-full outline-none resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- Medio de pago, fecha, descuento, total -->
+        <div class="col-span-6 space-y-6">
+
+            <div>
+                <label class="text-sm">Medio de Pago</label>
+                <div class="border-2 border-black flex items-center p-2">
+                    <input type="text" class="w-full outline-none" />
+                    <i class="fas fa-chevron-down ml-2"></i>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-sm">Fecha de Compra</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" class="w-full outline-none" />
+                </div>
+            </div>
+
+            <div>
+                <label class="text-sm">Descuento</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" class="w-full outline-none" />
+                </div>
+            </div>
+
+            <div>
+                <label class="text-sm">Valor Total a Pagar</label>
+                <div class="border-2 border-black p-2">
+                    <input type="text" class="w-full outline-none" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </div>

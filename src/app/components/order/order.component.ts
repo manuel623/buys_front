@@ -8,6 +8,8 @@ import { NotificationService } from '../../services/notification/notificacion.se
 import Swal from 'sweetalert2';
 import { Order, ApiResponse } from '../../models/order/order.model';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
+import { IProduct } from '../../models/product/product.model';
+import { ProductService } from '../../services/product/product.service';
 
 @Component({
   selector: 'app-order',
@@ -21,6 +23,7 @@ export class OrderComponent implements OnInit {
   public loadingTable: boolean = true;
   public viewForm: boolean = false;
   public orderForm: FormGroup;
+  public products: any;
   public dataTempOrder: Order | null = null;
   public dataOrder: Order[] = [];
   public createOrderButton: boolean = false;
@@ -28,14 +31,24 @@ export class OrderComponent implements OnInit {
   constructor(
     private orderService: OrderService,
     private fb: FormBuilder,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private _product: ProductService
   ) {
+    // this.orderForm = this.fb.group({
+    //   total: [0, [Validators.required, Validators.min(0)]],
+    //   description: [''],
+    //   billing_date: [''],
+    //   payment_method: [''],
+    //   has_discount: [false]
+    // });
+
     this.orderForm = this.fb.group({
-      total: [0, [Validators.required, Validators.min(0)]],
+      productId: [''],
+      unitValue: [''],
+      quantity: [1],
       description: [''],
-      billing_date: [''],
-      payment_method: [''],
-      has_discount: [false]
+      stock: [''],
+      subtotal: ['']
     });
   }
 
@@ -60,9 +73,10 @@ export class OrderComponent implements OnInit {
    * Muestra el formulario para crear una nueva orden
    */
   viewFormCreate(): void {
-    this.orderForm.reset({ total: 0, has_discount: false });
+    //this.orderForm.reset({ total: 0, has_discount: false });
     this.dataTempOrder = null;
     this.viewForm = true;
+    this.getProducts()
   }
 
   /**
@@ -206,5 +220,43 @@ export class OrderComponent implements OnInit {
    */
   goBack(): void {
     this.viewForm = false;
+  }
+
+  getProducts() {
+    this._product.listProduct().subscribe(
+      (res: any) => {
+        this.products = res.original.data;
+      },
+      (err) => {
+        console.error('Error cargando productos', err);
+      }
+    );
+  }
+
+  handleProductChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const selectedValue = selectElement.value;
+    this.onProductChange(selectedValue);
+  }
+
+  onProductChange(productId: string) {
+    const selectedProduct = this.products.find((p: any) => p.id == +productId);
+    if (selectedProduct) {
+      this.orderForm.patchValue({
+        unitValue: parseFloat(selectedProduct.price),
+        description: selectedProduct.description,
+        stock: selectedProduct.stock,
+        quantity: 1,
+        subtotal: parseFloat(selectedProduct.price) * 1
+      });
+    }
+  }
+
+
+  calculateSubtotal() {
+    const unitValue = this.orderForm.get('unitValue')?.value || 0;
+    const quantity = this.orderForm.get('quantity')?.value || 0;
+    const subtotal = unitValue * quantity;
+    this.orderForm.patchValue({ subtotal: subtotal });
   }
 }
