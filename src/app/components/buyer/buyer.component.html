@@ -1,1 +1,135 @@
-<p>buyer works!</p>
+<div class="w-full bg-gray-100 py-10">
+    <div class="max-w-4xl mx-auto text-center px-4">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Gestión de Compradores</h1>
+        <p class="text-lg text-gray-600">Gestiona la administración de los compradores.</p>
+        <button *ngIf="!viewForm"
+            class="mt-6 bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium py-3 px-6 rounded"
+            (click)="viewFormCreate()">
+            <i class="fa-solid fa-plus mr-2"></i> Crear Comprador
+        </button>
+    </div>
+</div>
+
+<div class="max-w-6xl mx-auto my-10 px-4" *ngIf="!viewForm">
+    <h3 class="text-center text-xl font-bold mb-6">Compradores Registrados</h3>
+
+    <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
+        <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
+    </div>
+
+    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable">
+        <table class="min-w-full divide-y divide-gray-200 text-center">
+            <thead class="bg-blue-100">
+                <tr>
+                    <th class="py-3 px-4 font-semibold">Número de Documento</th>
+                    <th class="py-3 px-4 font-semibold">Nombre Completo</th>
+                    <th class="py-3 px-4 font-semibold">Correo Electrónico</th>
+                    <th class="py-3 px-4 font-semibold">Número Telefónico</th>
+                    <th class="py-3 px-4 font-semibold">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+                <tr *ngIf="dataBuyer.length === 0">
+                    <td colspan="5" class="py-4 text-gray-500">No hay compradores registrados.</td>
+                </tr>
+                <tr *ngFor="let item of dataBuyer">
+                    <td class="py-3 px-4">{{ item.document }}</td>
+                    <td class="py-3 px-4">
+                        {{ item.first_name }}
+                        {{ item.second_name?.trim() !== '' ? item.second_name : '' }}
+                        {{ item.first_last_name?.trim() !== '' ? item.first_last_name : '' }}
+                        {{ item.second_last_name?.trim() !== '' ? item.second_last_name : '' }}
+                    </td>
+                    <td class="py-3 px-4">
+                        {{ item.email?.trim() && item.email !== null ? item.email : 'No aplica' }}
+                    </td>
+                    <td class="py-3 px-4">
+                        {{ item.phone?.trim() && item.phone !== null ? item.phone : 'No aplica' }}
+                    </td>
+                    <td class="py-3 px-4 space-x-2">
+                        <button
+                            class="text-yellow-600 border border-yellow-400 hover:bg-yellow-100 px-3 py-1 rounded text-sm"
+                            (click)="editViewBuyer(item.id)">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+                        </button>
+                        <button class="text-red-600 border border-red-500 hover:bg-red-100 px-3 py-1 rounded text-sm"
+                            (click)="deleteBuyer(item.id)">
+                            <i class="fa-solid fa-delete-left fa-flip-vertical mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
+    <form [formGroup]="buyerForm" (ngSubmit)="submitForm()" class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-bold mb-6">Formulario de Comprador</h3>
+
+        <div class="mb-5">
+            <label for="document" class="block font-medium mb-1">Número de Documento</label>
+            <input type="text" formControlName="document" placeholder="Número de Documento"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': buyerForm.get('document')?.invalid && (buyerForm.get('document')?.touched || buyerForm.get('document')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('document')?.errors?.['required']">El
+                número de documento es requerido.</p>
+        </div>
+
+        <div class="mb-5">
+            <label for="first_name" class="block font-medium mb-1">Primer Nombre</label>
+            <input type="text" formControlName="first_name" placeholder="Primer Nombre"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': buyerForm.get('first_name')?.invalid && (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required']">El primer
+                nombre es requerido.</p>
+        </div>
+
+        <div class="mb-5">
+            <label for="second_name" class="block font-medium mb-1">Segundo Nombre</label>
+            <input type="text" formControlName="second_name" placeholder="Segundo Nombre"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring">
+        </div>
+
+        <div class="mb-5">
+            <label for="first_last_name" class="block font-medium mb-1">Primer Apellido</label>
+            <input type="text" formControlName="first_last_name" placeholder="Primer Apellido"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': buyerForm.get('first_last_name')?.invalid && (buyerForm.get('first_last_name')?.touched || buyerForm.get('first_last_name')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_last_name')?.errors?.['required']">El
+                primer apellido es requerido.</p>
+        </div>
+
+        <div class="mb-5">
+            <label for="second_last_name" class="block font-medium mb-1">Segundo Apellido</label>
+            <input type="text" formControlName="second_last_name" placeholder="Segundo Apellido"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring">
+        </div>
+
+        <div class="mb-5">
+            <label for="phone" class="block font-medium mb-1">Teléfono</label>
+            <input type="text" formControlName="phone" placeholder="Número Telefónico"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring">
+        </div>
+
+        <div class="mb-6">
+            <label for="email" class="block font-medium mb-1">Correo Electrónico</label>
+            <input type="email" formControlName="email" placeholder="Correo Electrónico"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': buyerForm.get('email')?.invalid && (buyerForm.get('email')?.touched || buyerForm.get('email')?.dirty)}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('email')?.errors?.['required']">El correo
+                electrónico es requerido.</p>
+            <p class="text-red-500 text-sm" *ngIf="buyerForm.get('email')?.errors?.['email']">El formato del correo
+                electrónico es inválido.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button" (click)="goBack()"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-5 rounded-lg">Volver</button>
+            <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded-lg disabled:opacity-50"
+                [disabled]="buyerForm.invalid">Guardar</button>
+        </div>
+    </form>
+
+</div>
