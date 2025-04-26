@@ -16,9 +16,27 @@ export class NotificationService {
     });
   }
 
+  showSuccessPromise(message: string) {
+    return Swal.fire({
+      title: '¡Éxito!',
+      text: message,
+      icon: 'success',
+      confirmButtonText: 'OK',
+    });
+  }
+
   showSuccess(message: string) {
     Swal.fire({
       title: '¡Éxito!',
+      text: message,
+      icon: 'success',
+      confirmButtonText: 'OK',
+    });
+  }
+
+  showInfo(message: string) {
+    Swal.fire({
+      title: 'Info!',
       text: message,
       icon: 'success',
       confirmButtonText: 'OK',

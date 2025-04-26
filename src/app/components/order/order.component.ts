@@ -1,262 +1,353 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { OrderService } from '../../services/order/order.service';
-import { NotificationService } from '../../services/notification/notificacion.service';
-import Swal from 'sweetalert2';
-import { Order, ApiResponse } from '../../models/order/order.model';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
-import { IProduct } from '../../models/product/product.model';
+import { OrderService } from '../../services/order/order.service';
+import { BuyerService } from '../../services/buyer/buyer.service';
 import { ProductService } from '../../services/product/product.service';
+import { NotificationService } from '../../services/notification/notificacion.service';
+import { OrderDetailService } from '../../services/order-detail/order-detail.service';
 
 @Component({
   selector: 'app-order',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent],
   templateUrl: './order.component.html',
-  styleUrls: ['./order.component.css']
+  styleUrl: './order.component.css'
 })
-export class OrderComponent implements OnInit {
-
-  public loadingTable: boolean = true;
-  public viewForm: boolean = false;
-  public orderForm: FormGroup;
-  public products: any;
-  public dataTempOrder: Order | null = null;
-  public dataOrder: Order[] = [];
-  public createOrderButton: boolean = false;
+export class OrderComponent {
+  viewForm = false;
+  currentStep = 1;
+  hideExtraFields = true;
+  loadingTable = false;
+  dataOrder: any[] = [];
+  products: any[] = [];
+  buyerForm!: FormGroup;
+  productForm!: FormGroup;
+  orderForm !: FormGroup;
+  minDate: string = new Date().toISOString().substring(0, 10);
 
   constructor(
-    private orderService: OrderService,
     private fb: FormBuilder,
+    private orderService: OrderService,
     private notificationService: NotificationService,
-    private _product: ProductService
+    private buyerService: BuyerService,
+    private productService: ProductService,
+    private orderDetailService: OrderDetailService,
   ) {
-    // this.orderForm = this.fb.group({
-    //   total: [0, [Validators.required, Validators.min(0)]],
-    //   description: [''],
-    //   billing_date: [''],
-    //   payment_method: [''],
-    //   has_discount: [false]
-    // });
+    this.buyerForm = this.fb.group({
+      document: ['', Validators.required],
+      first_name: ['', Validators.required],
+      second_name: [''],
+      first_last_name: [''],
+      second_last_name: [''],
+      email: [''],
+      phone: ['']
+    });
+
+    this.productForm = this.fb.group({
+      products: this.fb.array([])
+    });
 
     this.orderForm = this.fb.group({
-      productId: [''],
+      description: [''],
+      payment_method: ['efectivo'],
+      billing_date: [new Date().toISOString().substring(0, 10)],
+      discount: [0],
+      total: [''],
+    });
+
+  }
+
+  ngOnInit() {
+    this.getOrders();
+    this.loadProducts();
+    this.addProduct();
+  }
+
+  getOrders() {
+    this.loadingTable = true;
+    this.orderService.listOrder().subscribe(res => {
+      this.dataOrder = res.original.data;
+      this.loadingTable = false;
+    });
+  }
+
+  loadProducts() {
+    this.productService.listProduct().subscribe(res => {
+      this.products = res.original.data;
+    });
+  }
+
+  get productControls() {
+    return this.productForm.get('products') as FormArray;
+  }
+
+  viewFormCreate() {
+    this.viewForm = true;
+  }
+
+  goBack() {
+    if (this.currentStep === 1) {
+      this.viewForm = false;
+    } else {
+      this.currentStep--;
+    }
+  }
+
+  nextStep() {
+    if (this.buyerForm.invalid) return;
+
+    const doc = this.buyerForm.value.document;
+    this.buyerService.getBuyerByDocument(doc).subscribe(client => {
+      if (client) {
+        this.hideExtraFields = true;
+        this.buyerForm.patchValue(client);
+        this.currentStep++;
+      } else {
+        this.hideExtraFields = false;
+        if (this.buyerForm.valid) {
+          this.buyerService.createBuyer(this.buyerForm.value).subscribe(newClient => {
+            this.buyerForm.patchValue(newClient);
+            this.currentStep++;
+          });
+        }
+      }
+    });
+  }
+
+  onDocumentBlur(): void {
+    const doc = this.buyerForm.get('document')?.value;
+    if (!doc) return;
+    const payload = { document: doc };
+    this.buyerService.getBuyerByDocument(doc).subscribe(
+      (res: any) => {
+        if (res.original?.data) {
+          this.buyerForm.patchValue(res.original.data);
+          this.notificationService.showSuccessPromise("Este número de documento ya realizó una compra. Serás redirigido al siguiente paso.")
+            .then(() => {
+              this.nextStep();
+            });
+        } else {
+          this.notificationService.showInfo(res.original.message);
+          this.hideExtraFields = false;
+        }
+      },
+      (err) => {
+        this.notificationService.showError('Error al buscar el comprador.');
+      }
+    );
+  }
+
+  addProduct() {
+    const productGroup = this.fb.group({
+      productId: ['', Validators.required],
       unitValue: [''],
-      quantity: [1],
+      quantity: [1, Validators.required],
       description: [''],
       stock: [''],
       subtotal: ['']
     });
+    this.productControls.push(productGroup);
+    productGroup.get('quantity')?.valueChanges.subscribe(() => this.calculateSubTotal(productGroup));
+    productGroup.get('unitValue')?.valueChanges.subscribe(() => this.calculateSubTotal(productGroup));
   }
 
-  ngOnInit(): void {
-    this.getDataOrder();
+  get productArray(): FormArray {
+    return this.productForm.get('products') as FormArray;
   }
 
-  /**
-   * Carga la lista de órdenes desde el backend
-   */
-  getDataOrder(): void {
-    this.orderService.listOrder().subscribe(
-      (response: ApiResponse) => {
-        this.dataOrder = response.original.data;
-        this.loadingTable = false;
-      },
-      (error) => this.handleError(error)
-    );
+  // calcula el subtotal de un producto especfico
+  calculateSubTotal(productGroup: FormGroup): void {
+    const quantity = productGroup.get('quantity')?.value;
+    const unitValue = productGroup.get('unitValue')?.value;
+    const subtotal = quantity * unitValue;
+    productGroup.get('subtotal')?.setValue(subtotal);
+    this.calculateTotal();
   }
 
-  /**
-   * Muestra el formulario para crear una nueva orden
-   */
-  viewFormCreate(): void {
-    //this.orderForm.reset({ total: 0, has_discount: false });
-    this.dataTempOrder = null;
-    this.viewForm = true;
-    this.getProducts()
+  // Calcular el valor total
+  calculateTotal(): void {
+    let total = 0;
+    this.productControls.controls.forEach((control: any) => {
+      total += control.get('subtotal')?.value || 0;
+    });
+    this.orderForm.get('total')?.setValue(total);
   }
 
-  /**
-   * Envía el formulario para crear o editar una orden
-   */
-  submitForm(): void {
-    if (this.dataTempOrder) {
-      this.editOrder();
-    } else {
-      this.createOrder();
+  removeProduct(index: number) {
+    this.productControls.removeAt(index);
+    this.calculateSubtotal();
+  }
+
+  handleProductChange(event: any, index: number) {
+    const productId = event.target.value;
+    const selectedProduct = this.products.find(p => p.id === +productId);
+    if (selectedProduct) {
+      const group = this.productControls.at(index);
+      group.patchValue({
+        unitValue: selectedProduct.price,
+        description: selectedProduct.description,
+        stock: selectedProduct.stock,
+        subtotal: selectedProduct.price * group.value.quantity
+      });
+      this.calculateSubtotal();
     }
   }
 
-  /**
-   * Crea una nueva orden en el backend
-   */
-  createOrder(): void {
-    if (this.orderForm.valid) {
-      this.handleLoadingState(true);
+  calculateSubtotal() {
+    this.productControls.controls.forEach(group => {
+      const unit = +group.get('unitValue')?.value || 0;
+      const qty = +group.get('quantity')?.value || 0;
+      group.patchValue({ subtotal: unit * qty });
+    });
+  }
 
-      this.orderService.createOrder(this.orderForm.value).subscribe(
-        (response: ApiResponse) => {
-          this.handleLoadingState(false);
-          this.handleResponse(response, () => this.viewForm = false);
-        },
-        (error) => {
-          this.handleLoadingState(false);
-          this.handleError(error);
-        }
-      );
+  editViewOrder(id: number) {
+    // edita una orden
+  }
+
+  deleteOrder(id: number) {
+    this.orderService.deleteOrder(id).subscribe(() => this.getOrders());
+  }
+
+  submitOrder(): void {
+    // se validan formularios
+    if (this.buyerForm.invalid || this.productForm.invalid || this.orderForm.invalid) {
+      this.notificationService.showWarning('Por favor, complete todos los campos requeridos.');
+      return;
     }
-  }
 
-  /**
-   * Edita una orden existente en el backend
-   */
-  editOrder(): void {
-    if (this.orderForm.valid && this.dataTempOrder?.id !== undefined) {
-      this.handleLoadingState(true);
-      const data = this.prepareOrderData();
+    const buyerData = this.buyerForm.value;
+    const orderData = this.orderForm.value;
+    const orderDetailData = this.productForm.value;
 
-      this.orderService.editOrder(data, this.dataTempOrder.id).subscribe(
-        (response: ApiResponse) => {
-          this.handleLoadingState(false);
-          this.handleResponse(response, () => this.viewForm = false);
-        },
-        (error) => {
-          this.handleLoadingState(false);
-          this.handleError(error);
-        }
-      );
-    }
-  }
+    console.log("Buyer Data:", buyerData);
+    console.log("Order Data:", orderData);
+    console.log("Order Detail Data:", orderDetailData);
 
-  /**
-   * Prepara los datos del formulario para ser enviados
-   */
-  private prepareOrderData(): Order {
-    return {
-      id: this.dataTempOrder!.id,
-      total: this.orderForm.get('total')!.value,
-      description: this.orderForm.get('description')!.value,
-      billing_date: this.orderForm.get('billing_date')!.value,
-      payment_method: this.orderForm.get('payment_method')!.value,
-      has_discount: this.orderForm.get('has_discount')!.value,
-    };
-  }
-
-  /**
-   * Muestra el formulario con los datos de una orden existente
-   */
-  editViewOrder(id: number): void {
-    this.orderForm.reset();
-    this.viewForm = true;
-    this.dataTempOrder = this.dataOrder.find(order => order.id === id) || null;
-
-    if (this.dataTempOrder) {
-      this.orderForm.patchValue(this.dataTempOrder);
-    }
-  }
-
-  /**
-   * Elimina una orden con confirmación previa
-   */
-  deleteOrder(id: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará el registro permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminarlo',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.notificationService.showLoading();
-        this.orderService.deleteOrder(id).subscribe(
-          (response: ApiResponse) => {
-            this.getDataOrder();
-            this.notificationService.showSuccess(response.original.message);
-          },
-          (error) => {
-            this.notificationService.showError('Error al eliminar el registro.');
-          }
-        );
-      }
+    this.getOrCreateBuyer(buyerData).then((buyerId) => {
+      this.createOrderWithDetails(buyerId, orderData, orderDetailData.products);
+    }).catch((err) => {
+      this.notificationService.showError(err || 'Error al procesar el comprador.');
     });
   }
 
   /**
-   * Muestra notificaciones de éxito o advertencia según la respuesta
+   * Busca el comprador por documento. Si no existe, lo crea y luego lo busca de nuevo.
+   * Devuelve una promesa con el buyerId.
    */
-  private handleResponse(response: ApiResponse, onSuccess: () => void): void {
-    if (response.original.success) {
-      this.getDataOrder();
-      this.notificationService.showSuccess(response.original.message);
-      onSuccess();
-    } else {
-      this.notificationService.showWarning('Error al procesar tu solicitud.');
-    }
+  private getOrCreateBuyer(buyerData: any): Promise<number> {
+    return new Promise((resolve, reject) => {
+      this.buyerService.getBuyerByDocument(buyerData.document).subscribe(
+        (res: any) => {
+          if (res.original?.data) {
+            this.notificationService.showSuccess('Comprador encontrado.');
+            resolve(res.original.data.id);
+          } else {
+            this.buyerService.createBuyer(buyerData).subscribe(
+              () => {
+                this.notificationService.showSuccess('Comprador creado exitosamente');
+                this.buyerService.getBuyerByDocument(buyerData.document).subscribe(
+                  (resAgain: any) => {
+                    if (resAgain.original?.data) {
+                      this.notificationService.showSuccess('ID del comprador obtenido tras la creación');
+                      resolve(resAgain.original.data.id);
+                    } else {
+                      reject('No se pudo obtener el comprador luego de crearlo');
+                    }
+                  },
+                  () => reject('Error al volver a buscar el comprador')
+                );
+              },
+              () => reject('Error al crear el comprador')
+            );
+          }
+        },
+        () => reject('Error al buscar el comprador')
+      );
+    });
   }
 
   /**
-   * Muestra errores del backend como notificación
+   * Crea la orden y sus detalles asociados.
    */
-  private handleError(error: any): void {
-    this.notificationService.showError(error);
-  }
+  private createOrderWithDetails(buyerId: number, orderData: any, products: any[]): void {
+    const orderPayload = {
+      description: orderData.description,
+      billing_date: orderData.billing_date,
+      payment_method: orderData.payment_method,
+      has_discount: orderData.has_discount,
+      total: orderData.total,
+    };
 
-  /**
-   * Muestra u oculta el loader al hacer peticiones
-   */
-  private handleLoadingState(isLoading: boolean): void {
-    this.createOrderButton = isLoading;
-    this.loadingTable = isLoading;
-  }
+    console.log("Order Payload:", orderPayload);
 
-  /**
-   * Regresa a la vista principal sin mostrar el formulario
-   */
-  goBack(): void {
-    this.viewForm = false;
-  }
+    this.orderService.createOrder(orderPayload).subscribe(
+      (orderRes: any) => {
+        const orderId = orderRes.original.data.id;
 
-  getProducts() {
-    this._product.listProduct().subscribe(
-      (res: any) => {
-        this.products = res.original.data;
+        // se crea el detalle de orden por cada producto
+        products.forEach((product: any, index: number) => {
+          const detailPayload = {
+            order_id: orderId,
+            buyer_id: buyerId,
+            product_id: Number(product.productId),
+            quantity: product.quantity,
+            unit_price: product.unitValue,
+            subtotal: product.subtotal
+          };
+
+          console.log("Order Detail Payload:", detailPayload);
+
+          this.orderDetailService.createOrderDetail(detailPayload).subscribe(
+            () => {
+              this.notificationService.showSuccess(`Detalle de orden ${index + 1} creado.`);
+            },
+            () => {
+              this.notificationService.showError('Error al crear el detalle de la orden.');
+            }
+          );
+        });
+
+        this.notificationService.showSuccess('Orden creada exitosamente.');
+        this.viewForm = false;
+        this.getOrders();
       },
-      (err) => {
-        console.error('Error cargando productos', err);
+      () => {
+        this.notificationService.showError('Error al crear la orden.');
       }
     );
   }
 
-  handleProductChange(event: Event): void {
-    const selectElement = event.target as HTMLSelectElement;
-    const selectedValue = selectElement.value;
-    this.onProductChange(selectedValue);
-  }
-
-  onProductChange(productId: string) {
-    const selectedProduct = this.products.find((p: any) => p.id == +productId);
-    if (selectedProduct) {
-      this.orderForm.patchValue({
-        unitValue: parseFloat(selectedProduct.price),
-        description: selectedProduct.description,
-        stock: selectedProduct.stock,
-        quantity: 1,
-        subtotal: parseFloat(selectedProduct.price) * 1
-      });
+  prevStep(): void {
+    if (this.currentStep === 2) {
+      this.currentStep = 1;
     }
   }
 
+  validateQuantity(index: number): void {
+    const group = this.productControls.at(index);
+    if (!group) return;
+    const quantity = group.get('quantity')?.value || 1;
+    const stock = group.get('stock')?.value || 1;
+    if (quantity > stock) {
+      this.notificationService.showError('La cantidad no puede ser mayor al stock disponible');
+      group.get('quantity')?.setValue(1);
+    } else if (quantity < 1) {
+      group.get('quantity')?.setValue(1);
+    }
+    this.calculateSubtotal()
+  }
 
-  calculateSubtotal() {
-    const unitValue = this.orderForm.get('unitValue')?.value || 0;
-    const quantity = this.orderForm.get('quantity')?.value || 0;
-    const subtotal = unitValue * quantity;
-    this.orderForm.patchValue({ subtotal: subtotal });
+  updateSubtotal(index: number): void {
+    const group = this.productControls.at(index);
+    if (!group) return;
+    const quantity = Number(group.get('quantity')?.value || 0);
+    const unitValue = Number(group.get('unitValue')?.value || 0);
+    const subtotal = quantity * unitValue;
+    group.get('subtotal')?.setValue(subtotal);
   }
 }

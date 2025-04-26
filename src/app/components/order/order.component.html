@@ -20,10 +20,10 @@
         <table class="min-w-full divide-y divide-gray-200 text-center">
             <thead class="bg-blue-100">
                 <tr>
-                    <th class="py-3 px-4 font-semibold">ID</th>
                     <th class="py-3 px-4 font-semibold">Medio de Pago</th>
-                    <th class="py-3 px-4 font-semibold">Fecha</th>
-                    <th class="py-3 px-4 font-semibold">Total</th>
+                    <th class="py-3 px-4 font-semibold">Fecha de Pago</th>
+                    <th class="py-3 px-4 font-semibold">Descripcion</th>
+                    <th class="py-3 px-4 font-semibold">Valor Total</th>
                     <th class="py-3 px-4 font-semibold">Acciones</th>
                 </tr>
             </thead>
@@ -32,9 +32,9 @@
                     <td colspan="5" class="py-4 text-gray-500">No hay órdenes registradas.</td>
                 </tr>
                 <tr *ngFor="let item of dataOrder">
-                    <td class="py-3 px-4">{{ item.id }}</td>
                     <td class="py-3 px-4">{{ item.payment_method }}</td>
                     <td class="py-3 px-4">{{ item.billing_date | date: 'shortDate' }}</td>
+                    <td class="py-3 px-4">{{ item.description }}</td>
                     <td class="py-3 px-4">${{ item.total | number: '1.2-2' }}</td>
                     <td class="py-3 px-4 space-x-2">
                         <button
@@ -105,120 +105,208 @@
 </div> -->
 
 <div *ngIf="viewForm" class="mx-auto px-4">
+    <div *ngIf="currentStep === 1">
+        <form [formGroup]="buyerForm" class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-center text-2xl font-bold mb-6">Formulario del Comprador</h3>
 
-    <form [formGroup]="orderForm">
-        <div class="grid grid-cols-12 gap-4 items-center">
+            <div class="mb-5">
+                <label for="document" class="block font-medium mb-1">Documento</label>
+                <input type="text" formControlName="document" placeholder="Número de Documento"
+                    class="w-full border rounded px-4 py-2 focus:outline-none focus:ring" (blur)="onDocumentBlur()"
+                    [ngClass]="{
+                      'border-red-500': buyerForm.get('document')?.invalid &&
+                      (buyerForm.get('document')?.touched || buyerForm.get('document')?.dirty)
+                   }" />
+                <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('document')?.errors?.['required'] &&
+                      (buyerForm.get('document')?.touched || buyerForm.get('document')?.dirty)">
+                    El documento es requerido.
+                </p>
+            </div>
 
-            <div class="col-span-2">
-                <label class="text-sm">Nombre del producto</label>
-                <div class="border-2 border-black p-2">
-                    <select formControlName="productId" (change)="handleProductChange($event)"
-                        class="w-full outline-none">
-                        <option value="">Seleccione un producto</option>
-                        <option *ngFor="let product of products" [value]="product.id">
-                            {{ product.name }}
-                        </option>
-                    </select>
+            <div *ngIf="!hideExtraFields">
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Primer Nombre</label>
+                    <input type="text" formControlName="first_name" class="w-full border rounded px-4 py-2" placeholder="Nombre"
+                    [ngClass]="{
+                        'border-red-500': buyerForm.get('first_name')?.invalid &&
+                        (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)
+                     }"/>
+                     <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required'] &&
+                      (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)">
+                    El primer nombre es requerido.
+                </p>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Segundo Nombre</label>
+                    <input type="text" formControlName="second_name" class="w-full border rounded px-4 py-2" />
+                </div>
+
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Primer Apellido</label>
+                    <input type="text" formControlName="first_last_name" class="w-full border rounded px-4 py-2" />
+                </div>
+
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Segundo Apellido</label>
+                    <input type="text" formControlName="second_last_name" class="w-full border rounded px-4 py-2" />
+                </div>
+
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Correo Electrónico</label>
+                    <input type="email" formControlName="email" class="w-full border rounded px-4 py-2" />
+                </div>
+
+                <div class="mb-5">
+                    <label class="block font-medium mb-1">Teléfono</label>
+                    <input type="text" formControlName="phone" class="w-full border rounded px-4 py-2" />
                 </div>
             </div>
 
-            <div class="col-span-2">
-                <label class="text-sm">Valor por unidad</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" formControlName="unitValue" class="w-full outline-none" readonly />
-                </div>
+            <div class="flex justify-between">
+                <button type="button" (click)="goBack()"
+                    class="bg-gray-500 text-white py-2 px-5 rounded-lg">Volver</button>
+                <button type="button" (click)="nextStep()" class="bg-blue-600 text-white py-2 px-5 rounded-lg"
+                    [disabled]="buyerForm.invalid">Siguiente</button>
             </div>
-
-            <div class="col-span-1">
-                <label class="text-sm">Cantidad</label>
-                <div class="border-2 border-black p-2">
-                    <input type="number" formControlName="quantity" (input)="calculateSubtotal()"
-                        class="w-full outline-none" />
-                </div>
-            </div>
-
-            <div class="col-span-2">
-                <label class="text-sm">Descripción</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" formControlName="description" class="w-full outline-none" readonly />
-                </div>
-            </div>
-
-            <div class="col-span-1">
-                <label class="text-sm">Stock</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" formControlName="stock" class="w-full outline-none" readonly />
-                </div>
-            </div>
-
-            <div class="col-span-2">
-                <label class="text-sm">Valor SubTotal</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" formControlName="subtotal" class="w-full outline-none" readonly />
-                </div>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-4 mt-2">
-            <button type="button" class="text-2xl">+</button>
-        </div>
-    </form>
-
-
-    <!-- Subtotal Total -->
-    <div class="flex justify-end">
-        <div class="text-right">
-            <label class="text-sm">SubTotal Total</label>
-            <div class="border-2 border-black p-2 w-32">
-                <input type="text" class="w-full outline-none" />
-            </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Segunda Parte -->
-    <div class="grid grid-cols-12 gap-6 mt-8">
 
-        <!-- Descripcion de la orden -->
-        <div class="col-span-6">
-            <label class="text-sm">Descripción de la Orden</label>
-            <div class="border-2 border-black p-2 h-60">
-                <textarea class="w-full h-full outline-none resize-none"></textarea>
+    <div *ngIf="currentStep === 2">
+        <form [formGroup]="productForm">
+            <div formArrayName="products">
+                <div *ngIf="products?.length === 0" class="text-red-500 text-sm mb-4">
+                    No hay productos disponibles. Por favor, contacte al administrador.
+                </div>
+
+                <!-- Mostrar los productos si existen -->
+                <ng-container *ngIf="products?.length">
+                    <div *ngFor="let group of productControls.controls; let i = index" [formGroupName]="i"
+                        class="grid grid-cols-11 gap-4 items-center mb-2">
+
+                        <!-- Nombre del producto -->
+                        <div class="col-span-2">
+                            <label class="text-sm">Nombre del producto</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <select formControlName="productId" (change)="handleProductChange($event, i)"
+                                    class="w-full outline-none">
+                                    <option value="">Seleccione un producto</option>
+                                    <option *ngFor="let product of products" [value]="product.id">
+                                        {{ product.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Valor por unidad -->
+                        <div class="col-span-2">
+                            <label class="text-sm">Valor por unidad</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <input type="text" formControlName="unitValue" class="w-full outline-none" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="col-span-1">
+                            <label class="text-sm">Cantidad</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <input type="number" formControlName="quantity" (input)="validateQuantity(i)"
+                                    class="w-full outline-none" min="1" />
+                            </div>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-span-2">
+                            <label class="text-sm">Descripción</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <input type="text" formControlName="description" class="w-full outline-none" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Stock -->
+                        <div class="col-span-1">
+                            <label class="text-sm">Stock</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <input type="text" formControlName="stock" class="w-full outline-none" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="col-span-2">
+                            <label class="text-sm">Valor SubTotal</label>
+                            <div class="border border-gray-200 rounded-lg p-2">
+                                <input type="text" formControlName="subtotal" class="w-full outline-none" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="flex items-center space-x-2 mt-6">
+                            <button type="button" class="text-2xl" (click)="addProduct()">+</button>
+                            <button *ngIf="productControls.length > 1" type="button" class="text-2xl text-red-600"
+                                (click)="removeProduct(i)">−</button>
+                        </div>
+                    </div>
+                </ng-container>
             </div>
-        </div>
+        </form>
 
-        <!-- Medio de pago, fecha, descuento, total -->
-        <div class="col-span-6 space-y-6">
+        <form [formGroup]="orderForm">
+            <div class="grid grid-cols-12 gap-6 mt-8">
 
-            <div>
-                <label class="text-sm">Medio de Pago</label>
-                <div class="border-2 border-black flex items-center p-2">
-                    <input type="text" class="w-full outline-none" />
-                    <i class="fas fa-chevron-down ml-2"></i>
+                <!-- Descripcion de la orden -->
+                <div class="col-span-6">
+                    <label class="text-sm">Descripción de la Orden</label>
+                    <div class="border border-gray-200 rounded-lg p-2 h-60">
+                        <textarea formControlName="description"
+                            class="w-full h-full outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Medio de pago, fecha, descuento, total -->
+                <div class="col-span-6 space-y-6">
+
+                    <div>
+                        <label class="text-sm">Medio de Pago</label>
+                        <div class="border border-gray-200 rounded-lg flex items-center p-2">
+                            <select formControlName="payment_method" class="w-full outline-none bg-transparent">
+                                <option value="efectivo">Efectivo</option>
+                                <option value="nequi">Nequi</option>
+                                <option value="daviplata">Daviplata</option>
+                                <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                                <option value="tarjeta_debito">Tarjeta de Débito</option>
+                            </select>
+                            <i class="fas fa-chevron-down ml-2 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm">Fecha de Compra</label>
+                        <div class="border border-gray-200 rounded-lg p-2">
+                            <input formControlName="billing_date" type="date" class="w-full outline-none"
+                                [min]="minDate" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm">Valor Total a Pagar</label>
+                        <div class="border border-gray-200 rounded-lg p-2">
+                            <input formControlName="total" type="text" class="w-full outline-none" readonly />
+                        </div>
+                    </div>
+
                 </div>
             </div>
+        </form>
 
-            <div>
-                <label class="text-sm">Fecha de Compra</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" class="w-full outline-none" />
-                </div>
-            </div>
 
-            <div>
-                <label class="text-sm">Descuento</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" class="w-full outline-none" />
-                </div>
-            </div>
-
-            <div>
-                <label class="text-sm">Valor Total a Pagar</label>
-                <div class="border-2 border-black p-2">
-                    <input type="text" class="w-full outline-none" />
-                </div>
-            </div>
-
-        </div>
+        <button (click)="prevStep()">Anterior</button>
+        <button (click)="submitOrder()">Enviar Orden</button>
     </div>
+
+
+
+
+
 
 </div>
