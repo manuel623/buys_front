@@ -214,7 +214,6 @@ export class OrderComponent {
   }
 
   submitOrder(): void {
-    // se validan formularios
     if (this.buyerForm.invalid || this.productForm.invalid || this.orderForm.invalid) {
       this.notificationService.showWarning('Por favor, complete todos los campos requeridos.');
       return;
@@ -305,6 +304,15 @@ export class OrderComponent {
           this.orderDetailService.createOrderDetail(detailPayload).subscribe(
             () => {
               this.notificationService.showSuccess(`Detalle de orden ${index + 1} creado.`);
+              const newStock = product.stock - product.quantity;
+              this.productService.updateStock(product.productId, newStock).subscribe(
+                () => {
+                  console.log(`Stock actualizado para producto ${product.productId}`);
+                },
+                () => {
+                  console.error('Error actualizando stock del producto');
+                }
+              );
             },
             () => {
               this.notificationService.showError('Error al crear el detalle de la orden.');

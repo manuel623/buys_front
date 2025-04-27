@@ -31,6 +31,10 @@ export class ProductService {
         return this.http.put<any>(`${this.apiUrl}/product/editProduct/` + id, data, this.header.getHttpOptions());
     }
 
+    updateStock(id: number, newStock: number): Observable<any> {
+        return this.http.patch(`${this.apiUrl}/product/updateStock/` + id, {stock: newStock}, this.header.getHttpOptions() );
+    }
+
     deleteProduct(id: number): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/product/deleteProduct/` + id, this.header.getHttpOptions());
     }
