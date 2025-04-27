@@ -60,4 +60,17 @@ export class NotificationService {
       confirmButtonText: 'OK',
     });
   }
+
+  showDeleteConfirmation() {
+    return Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Una vez eliminada, no podrás recuperar esta información.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    });
+  }
 }

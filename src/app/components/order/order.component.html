@@ -16,7 +16,7 @@
     <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
         <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
     </div>
-    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable">
+    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable && !viewOrderDetail">
         <table class="min-w-full divide-y divide-gray-200 text-center">
             <thead class="bg-blue-100">
                 <tr>
@@ -38,9 +38,9 @@
                     <td class="py-3 px-4">${{ item.total | number: '1.2-2' }}</td>
                     <td class="py-3 px-4 space-x-2">
                         <button
-                            class="text-yellow-600 border border-yellow-400 hover:bg-yellow-100 px-3 py-1 rounded text-sm"
-                            (click)="editViewOrder(item.id)">
-                            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+                            class="text-green-600 border border-green-500 hover:bg-green-100 px-3 py-1 rounded text-sm"
+                            (click)="consultOrderDetail(item.id)">
+                            <i class="fa-solid fa-circle-info mr-1"></i>Detalles
                         </button>
                         <button class="text-red-600 border border-red-500 hover:bg-red-100 px-3 py-1 rounded text-sm"
                             (click)="deleteOrder(item.id)">
@@ -53,64 +53,95 @@
     </div>
 </div>
 
-<!-- <div *ngIf="viewForm" class="max-w-2xl mx-auto px-4">
-    <form [formGroup]="orderForm" (ngSubmit)="submitForm()" class="bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-center text-2xl font-bold mb-6">Formulario de Orden</h3>
-
-        <div class="mb-5">
-            <label class="block font-medium mb-1">Comprador</label>
-            <input formControlName="description" type="text" placeholder="Descripción de la Orden"
-                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
-                [ngClass]="{'border-red-500': orderForm.get('description')?.invalid && orderForm.get('description')?.touched}">
-            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('description')?.errors?.['required']">
-                La descripción es requerida.
-            </p>
-        </div>
-
-        <div class="mb-5">
-            <label class="block font-medium mb-1">Fecha de Facturación</label>
-            <input formControlName="billing_date" type="date"
-                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
-                [ngClass]="{'border-red-500': orderForm.get('billing_date')?.invalid && orderForm.get('billing_date')?.touched}">
-            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('billing_date')?.errors?.['required']">
-                La fecha de facturación es requerida.
-            </p>
+<!-- sección para mostrar los detalles de la orden -->
+<div *ngIf="orderDetails && orderDetails.length > 0 && viewOrderDetail" class="overflow-x-auto">
+    <div class="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+        <button (click)="viewOrderDetail = false" class="mb-4 text-blue-500 hover:text-blue-700 focus:outline-none">
+            <i class="fas fa-arrow-left mr-2"></i> Atrás
+        </button>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Detalles de la Orden</h2>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <p class="text-gray-600"><span class="font-semibold">Descripción:</span> {{
+                        orderDetails[0].order.description }}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Fecha de Facturación:</span> {{
+                        orderDetails[0].order.billing_date | date: 'shortDate' }}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Método de Pago:</span> {{
+                        orderDetails[0].order.payment_method }}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Total de la Orden:</span> ${{
+                        orderDetails[0].order.total | number: '1.2-2' }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600"><span class="font-semibold">ID de la Orden:</span> {{
+                        orderDetails[0].order.id }}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Fecha de Creación:</span> {{
+                        orderDetails[0].order.created_at | date: 'short' }}</p>
+                </div>
+            </div>
         </div>
 
         <div class="mb-6">
-            <label class="block font-medium mb-1">Total</label>
-            <input formControlName="total" type="number" placeholder="Total de la Orden"
-                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
-                [ngClass]="{'border-red-500': orderForm.get('total')?.invalid && orderForm.get('total')?.touched}">
-            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('total')?.errors?.['required']">
-                El total es requerido.
-            </p>
+            <h3 class="text-lg font-semibold text-gray-800">Información del Comprador</h3>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <p *ngIf="orderDetails[0].buyer.first_name" class="text-gray-600"><span
+                            class="font-semibold">Nombre:</span> {{
+                        orderDetails[0].buyer.first_name }} {{ orderDetails[0].buyer.second_name }}</p>
+                    <p *ngIf="orderDetails[0].buyer.first_last_name" class="text-gray-600"><span
+                            class="font-semibold">Apellido:</span> {{
+                        orderDetails[0].buyer.first_last_name }} {{ orderDetails[0].buyer.second_last_name }}</p>
+                    <p *ngIf="orderDetails[0].buyer.document" class="text-gray-600"><span
+                            class="font-semibold">Documento:</span> {{
+                        orderDetails[0].buyer.document }}</p>
+                    <p *ngIf="orderDetails[0].buyer.email" class="text-gray-600"><span class="font-semibold">Correo
+                            Electrónico:</span> {{
+                        orderDetails[0].buyer.email }}</p>
+                </div>
+                <div>
+                    <p *ngIf="orderDetails[0].buyer.phone" class="text-gray-600"><span
+                            class="font-semibold">Teléfono:</span> {{ orderDetails[0].buyer.phone
+                        }}</p>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-5">
-            <label class="inline-flex items-center">
-                <input formControlName="has_discount" type="checkbox" class="form-checkbox h-5 w-5 text-blue-600">
-                <span class="ml-2 text-sm">Aplicar Descuento</span>
-            </label>
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800">Detalles de los Productos</h3>
+            <div class="mt-4">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-blue-100">
+                        <tr>
+                            <th class="py-3 px-4 font-semibold">Producto</th>
+                            <th class="py-3 px-4 font-semibold">Cantidad</th>
+                            <th class="py-3 px-4 font-semibold">Precio Unitario</th>
+                            <th class="py-3 px-4 font-semibold">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        <tr *ngFor="let item of orderDetails">
+                            <td class="py-3 px-4 text-center">{{ item.product.name }}</td>
+                            <td class="py-3 px-4 text-center">{{ item.quantity }}</td>
+                            <td class="py-3 px-4 text-center">${{ item.unit_price | number: '1.2-2' }}</td>
+                            <td class="py-3 px-4 text-center">${{ item.subtotal | number: '1.2-2' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
+</div>
 
-        <div class="flex justify-between">
-            <button type="button" (click)="goBack()"
-                class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-5 rounded-lg">Volver</button>
-            <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded-lg disabled:opacity-50"
-                [disabled]="orderForm.invalid">Guardar</button>
-        </div>
-    </form>
-</div> -->
 
+<!-- Flujo para crear ordenes de compra -->
 <div *ngIf="viewForm" class="mx-auto px-4">
     <div *ngIf="currentStep === 1">
         <form [formGroup]="buyerForm" class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-center text-2xl font-bold mb-6">Formulario del Comprador</h3>
 
             <div class="mb-5">
-                <label for="document" class="block font-medium mb-1">Documento</label>
+                <label for="document" class="block font-medium mb-1">Documento <span
+                        class="text-red-400">*</span></label>
                 <input type="text" formControlName="document" placeholder="Número de Documento"
                     class="w-full border rounded px-4 py-2 focus:outline-none focus:ring" (blur)="onDocumentBlur()"
                     [ngClass]="{
@@ -125,16 +156,16 @@
 
             <div *ngIf="!hideExtraFields">
                 <div class="mb-5">
-                    <label class="block font-medium mb-1">Primer Nombre</label>
-                    <input type="text" formControlName="first_name" class="w-full border rounded px-4 py-2" placeholder="Nombre"
-                    [ngClass]="{
+                    <label class="block font-medium mb-1">Primer Nombre <span class="text-red-400">*</span></label>
+                    <input type="text" formControlName="first_name" class="w-full border rounded px-4 py-2"
+                        placeholder="Nombre" [ngClass]="{
                         'border-red-500': buyerForm.get('first_name')?.invalid &&
                         (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)
-                     }"/>
-                     <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required'] &&
+                     }" />
+                    <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('first_name')?.errors?.['required'] &&
                       (buyerForm.get('first_name')?.touched || buyerForm.get('first_name')?.dirty)">
-                    El primer nombre es requerido.
-                </p>
+                        El primer nombre es requerido.
+                    </p>
                 </div>
 
                 <div class="mb-5">
@@ -153,20 +184,33 @@
                 </div>
 
                 <div class="mb-5">
-                    <label class="block font-medium mb-1">Correo Electrónico</label>
-                    <input type="email" formControlName="email" class="w-full border rounded px-4 py-2" />
+                    <label class="block font-medium mb-1">Correo Electrónico <span class="text-red-400">*</span></label>
+                    <input type="email" formControlName="email" class="w-full border rounded px-4 py-2" [ngClass]="{
+                        'border-red-500': buyerForm.get('email')?.invalid &&
+                        (buyerForm.get('email')?.touched || buyerForm.get('email')?.dirty)
+                     }" />
+                    <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('email')?.errors?.['required'] &&
+                      (buyerForm.get('email')?.touched || buyerForm.get('email')?.dirty)">
+                        El correo electrónico es requerido.
                 </div>
 
                 <div class="mb-5">
-                    <label class="block font-medium mb-1">Teléfono</label>
-                    <input type="text" formControlName="phone" class="w-full border rounded px-4 py-2" />
+                    <label class="block font-medium mb-1">Teléfono <span class="text-red-400">*</span></label>
+                    <input type="text" formControlName="phone" class="w-full border rounded px-4 py-2" [ngClass]="{
+                        'border-red-500': buyerForm.get('phone')?.invalid &&
+                        (buyerForm.get('phone')?.touched || buyerForm.get('phone')?.dirty)
+                     }" />
+                    <p class="text-red-500 text-sm mt-1" *ngIf="buyerForm.get('phone')?.errors?.['required'] &&
+                      (buyerForm.get('phone')?.touched || buyerForm.get('phone')?.dirty)">
+                        El teléfono es requerido.
                 </div>
             </div>
 
             <div class="flex justify-between">
                 <button type="button" (click)="goBack()"
                     class="bg-gray-500 text-white py-2 px-5 rounded-lg">Volver</button>
-                <button type="button" (click)="nextStep()" class="bg-blue-600 text-white py-2 px-5 rounded-lg"
+                <button type="button" (click)="nextStep()"
+                    class="bg-blue-600 disabled:bg-blue-200 text-white py-2 px-5 rounded-lg"
                     [disabled]="buyerForm.invalid">Siguiente</button>
             </div>
         </form>
@@ -175,17 +219,15 @@
 
     <div *ngIf="currentStep === 2">
         <form [formGroup]="productForm">
-            <div formArrayName="products">
+            <div formArrayName="products" class="my-4">
                 <div *ngIf="products?.length === 0" class="text-red-500 text-sm mb-4">
                     No hay productos disponibles. Por favor, contacte al administrador.
                 </div>
 
-                <!-- Mostrar los productos si existen -->
                 <ng-container *ngIf="products?.length">
                     <div *ngFor="let group of productControls.controls; let i = index" [formGroupName]="i"
                         class="grid grid-cols-11 gap-4 items-center mb-2">
 
-                        <!-- Nombre del producto -->
                         <div class="col-span-2">
                             <label class="text-sm">Nombre del producto</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -199,7 +241,6 @@
                             </div>
                         </div>
 
-                        <!-- Valor por unidad -->
                         <div class="col-span-2">
                             <label class="text-sm">Valor por unidad</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -207,7 +248,6 @@
                             </div>
                         </div>
 
-                        <!-- Cantidad -->
                         <div class="col-span-1">
                             <label class="text-sm">Cantidad</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -216,7 +256,6 @@
                             </div>
                         </div>
 
-                        <!-- Descripción -->
                         <div class="col-span-2">
                             <label class="text-sm">Descripción</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -224,7 +263,6 @@
                             </div>
                         </div>
 
-                        <!-- Stock -->
                         <div class="col-span-1">
                             <label class="text-sm">Stock</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -232,7 +270,6 @@
                             </div>
                         </div>
 
-                        <!-- Subtotal -->
                         <div class="col-span-2">
                             <label class="text-sm">Valor SubTotal</label>
                             <div class="border border-gray-200 rounded-lg p-2">
@@ -240,7 +277,6 @@
                             </div>
                         </div>
 
-                        <!-- Botones -->
                         <div class="flex items-center space-x-2 mt-6">
                             <button type="button" class="text-2xl" (click)="addProduct()">+</button>
                             <button *ngIf="productControls.length > 1" type="button" class="text-2xl text-red-600"
@@ -291,22 +327,24 @@
                     <div>
                         <label class="text-sm">Valor Total a Pagar</label>
                         <div class="border border-gray-200 rounded-lg p-2">
-                            <input formControlName="total" type="text" class="w-full outline-none" readonly />
+                            <input formControlName="total" type="text" class="w-full outline-none"
+                                [value]="orderForm.get('total')?.value | currencyFormat" readonly />
                         </div>
                     </div>
 
                 </div>
             </div>
         </form>
+        <div class="my-6 flex justify-between">
+            <button (click)="prevStep()"
+                class="bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300">
+                Anterior
+            </button>
 
-
-        <button (click)="prevStep()">Anterior</button>
-        <button (click)="submitOrder()">Enviar Orden</button>
+            <button (click)="submitOrder()"
+                class="bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                Enviar Orden
+            </button>
+        </div>
     </div>
-
-
-
-
-
-
 </div>

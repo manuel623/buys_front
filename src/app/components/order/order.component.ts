@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
@@ -9,25 +9,31 @@ import { BuyerService } from '../../services/buyer/buyer.service';
 import { ProductService } from '../../services/product/product.service';
 import { NotificationService } from '../../services/notification/notificacion.service';
 import { OrderDetailService } from '../../services/order-detail/order-detail.service';
+import { Order } from '../../models/order/order.model';
+import { CurrencyFormatPipe } from '../../pipe/currency-format.pipe';
 
 @Component({
   selector: 'app-order',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule, NavbarComponent, CurrencyFormatPipe],
   templateUrl: './order.component.html',
   styleUrl: './order.component.css'
 })
 export class OrderComponent {
-  viewForm = false;
-  currentStep = 1;
-  hideExtraFields = true;
-  loadingTable = false;
-  dataOrder: any[] = [];
-  products: any[] = [];
-  buyerForm!: FormGroup;
-  productForm!: FormGroup;
-  orderForm !: FormGroup;
-  minDate: string = new Date().toISOString().substring(0, 10);
+  public viewForm: boolean = false;
+  public currentStep: number = 1;
+  public hideExtraFields: boolean = true;
+  public loadingTable: boolean = false;
+  public viewFormEdit: boolean = false;
+  public viewOrderDetail: boolean = false;
+  public dataOrder: any[] = [];
+  public products: any[] = [];
+  public orderDetails: any[] = [];
+  public buyerForm!: FormGroup;
+  public productForm!: FormGroup;
+  public orderForm !: FormGroup;
+  public dataTempOrder: Order = {} as Order;
+  public minDate: string = new Date().toISOString().substring(0, 10);
 
   constructor(
     private fb: FormBuilder,
@@ -36,6 +42,7 @@ export class OrderComponent {
     private buyerService: BuyerService,
     private productService: ProductService,
     private orderDetailService: OrderDetailService,
+    private changeDetector: ChangeDetectorRef
   ) {
     this.buyerForm = this.fb.group({
       document: ['', Validators.required],
@@ -43,8 +50,8 @@ export class OrderComponent {
       second_name: [''],
       first_last_name: [''],
       second_last_name: [''],
-      email: [''],
-      phone: ['']
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', Validators.required]
     });
 
     this.productForm = this.fb.group({
@@ -126,10 +133,7 @@ export class OrderComponent {
       (res: any) => {
         if (res.original?.data) {
           this.buyerForm.patchValue(res.original.data);
-          this.notificationService.showSuccessPromise("Este número de documento ya realizó una compra. Serás redirigido al siguiente paso.")
-            .then(() => {
-              this.nextStep();
-            });
+          this.notificationService.showSuccessPromise("Este número de documento ya realizó una compra")
         } else {
           this.notificationService.showInfo(res.original.message);
           this.hideExtraFields = false;
@@ -205,29 +209,36 @@ export class OrderComponent {
     });
   }
 
-  editViewOrder(id: number) {
-    // edita una orden
-  }
-
-  deleteOrder(id: number) {
-    this.orderService.deleteOrder(id).subscribe(() => this.getOrders());
-  }
+  deleteOrder(id: number): void {
+    this.notificationService.showDeleteConfirmation().then((result) => {
+      if (result.isConfirmed) {
+        this.notificationService.showLoading();
+        this.orderService.deleteOrder(id).subscribe({
+          next: (response) => {
+            this.getOrders();
+            this.notificationService.showSuccess(response.original.message);
+          },
+          error: (error) => {
+            this.notificationService.showError('Error. Por favor, inténtalo de nuevo.');
+          }
+        });
+      } else {
+        console.log('Eliminación cancelada');
+      }
+    });
+  } 
 
   submitOrder(): void {
     if (this.buyerForm.invalid || this.productForm.invalid || this.orderForm.invalid) {
       this.notificationService.showWarning('Por favor, complete todos los campos requeridos.');
       return;
     }
-
     const buyerData = this.buyerForm.value;
     const orderData = this.orderForm.value;
     const orderDetailData = this.productForm.value;
 
-    console.log("Buyer Data:", buyerData);
-    console.log("Order Data:", orderData);
-    console.log("Order Detail Data:", orderDetailData);
-
     this.getOrCreateBuyer(buyerData).then((buyerId) => {
+      this.notificationService.showLoading();
       this.createOrderWithDetails(buyerId, orderData, orderDetailData.products);
     }).catch((err) => {
       this.notificationService.showError(err || 'Error al procesar el comprador.');
@@ -242,7 +253,7 @@ export class OrderComponent {
     return new Promise((resolve, reject) => {
       this.buyerService.getBuyerByDocument(buyerData.document).subscribe(
         (res: any) => {
-          if (res.original?.data) {
+          if (res.original.data) {
             this.notificationService.showSuccess('Comprador encontrado.');
             resolve(res.original.data.id);
           } else {
@@ -274,6 +285,8 @@ export class OrderComponent {
    * Crea la orden y sus detalles asociados.
    */
   private createOrderWithDetails(buyerId: number, orderData: any, products: any[]): void {
+    this.viewForm = false;
+    this.loadingTable = true;
     const orderPayload = {
       description: orderData.description,
       billing_date: orderData.billing_date,
@@ -281,8 +294,6 @@ export class OrderComponent {
       has_discount: orderData.has_discount,
       total: orderData.total,
     };
-
-    console.log("Order Payload:", orderPayload);
 
     this.orderService.createOrder(orderPayload).subscribe(
       (orderRes: any) => {
@@ -298,9 +309,6 @@ export class OrderComponent {
             unit_price: product.unitValue,
             subtotal: product.subtotal
           };
-
-          console.log("Order Detail Payload:", detailPayload);
-
           this.orderDetailService.createOrderDetail(detailPayload).subscribe(
             () => {
               const newStock = product.stock - product.quantity;
@@ -315,7 +323,7 @@ export class OrderComponent {
               detailsCreated++;
               if (detailsCreated === products.length) {
                 this.notificationService.showSuccess('Detalles de ordenes creados exitosamente.');
-                this.viewForm = false;
+                this.resetForms();
                 this.getOrders();
               }
             },
@@ -329,6 +337,13 @@ export class OrderComponent {
         this.notificationService.showError('Error al crear la orden.');
       }
     );
+  }
+
+  resetForms() {
+    this.buyerForm.reset();
+    this.productForm.reset();
+    this.orderForm.reset();
+    this.currentStep--;
   }
 
   prevStep(): void {
@@ -359,4 +374,25 @@ export class OrderComponent {
     const subtotal = quantity * unitValue;
     group.get('subtotal')?.setValue(subtotal);
   }
+
+  /**
+   * consulta los detalles de orden segun id
+   * @param orderId 
+   */
+  consultOrderDetail(orderId: number): void {
+    this.orderDetailService.getOrderDetails(orderId).subscribe(
+      (response: any) => {
+        if (response.original.success) {
+          this.viewOrderDetail = true
+          this.orderDetails = response.original.data;
+        } else {
+          this.notificationService.showWarning(response.original.message);
+        }
+      },
+      (error) => {
+        this.notificationService.showError('Error al obtener los detalles de la orden.');
+      }
+    );
+  }
+
 }

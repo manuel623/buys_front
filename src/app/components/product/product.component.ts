@@ -20,9 +20,11 @@ export class ProductComponent {
 
   public loadingTable: boolean = true;
   public viewForm: boolean = false;
+  public principalView: boolean = true;
   public productForm: FormGroup;
   public dataTempProduct: IProduct = {} as IProduct;
   public dataProduct: IProduct[] = [];
+  public topProducts: IProduct[] = [];
   public createProductButton: boolean = false;
 
   constructor(
@@ -42,24 +44,45 @@ export class ProductComponent {
     this.getDataProduct();
   }
 
-  // obtiene los productos
+  /**
+   * obtiene los productos
+   */
   getDataProduct() {
+    this.loadingTable = true;
     this._productService.listProduct().subscribe((response) => {
       this.dataProduct = response.original.data;
       this.loadingTable = false;
     }, (error) => {
-      this.handleError(error);
+      this.notificationService.showError(error);
+      this.loadingTable = false;
     });
   }
 
-  // Muestra el formulario para crear un producto nuevo
+  /**
+   * Muestra el formulario para crear un producto nuevo
+   */
   viewFormCreate() {
     this.productForm.reset();
     this.dataTempProduct = {} as IProduct;
     this.viewForm = true;
   }
 
-  // Envía el formulario de acuerdo si se esta editando o creando un producto
+  topPurchasedProducts() {
+    this.loadingTable = true;
+    this.principalView = false;
+    this._productService.topPurchasedProducts().subscribe((response) => {
+      this.topProducts = response.original.data
+      this.loadingTable = false;
+      this.principalView = true;
+    }, (error) => {
+      this.notificationService.showError(error);
+      this.loadingTable = false;
+      this.principalView = true;
+    });
+  }
+  /**
+   * Envia el formulario de acuerdo si se esta editando o creando un producto
+   */
   public submitForm() {
     if (this.dataTempProduct && Object.keys(this.dataTempProduct).length > 0) {
       this.editProduct();
@@ -68,7 +91,11 @@ export class ProductComponent {
     }
   }
 
-  // Maneja las respuestas
+  /**
+   * maneja las respuestas
+   * @param response 
+   * @param onSuccess 
+   */
   private handleResponse(response: any, onSuccess: () => void) {
     if (response.original.success) {
       this.getDataProduct();
@@ -79,18 +106,18 @@ export class ProductComponent {
     }
   }
 
-  // Maneja los errores de las solicitudes
-  private handleError(error: any) {
-    this.notificationService.showError(error);
-  }
-
-  // Actualiza el payload
+  /**
+   * Actualiza el payload
+   * @param isLoading 
+   */
   private handleLoadingState(isLoading: boolean) {
     this.createProductButton = isLoading;
     this.loadingTable = isLoading;
   }
 
-  // Edita un producto existente
+  /**
+   * Edita un producto existente
+   */
   editProduct() {
     if (this.productForm.valid) {
       this.handleLoadingState(true);
@@ -104,13 +131,15 @@ export class ProductComponent {
         },
         (error: any) => {
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
   }
 
-  // Crea un nuevo producto
+  /**
+   * Crea un nuevo producto
+   */
   createProduct() {
     if (this.productForm.valid) {
       this.handleLoadingState(true);
@@ -123,13 +152,16 @@ export class ProductComponent {
         },
         (error: any) => {
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
   }
 
-  // Prepara los datos del producto antes de crearlo o editarlos
+  /**
+   * Prepara los datos del producto antes de crearlo o editarlos
+   * @returns 
+   */
   private prepareProductData() {
     return {
       id: this.dataTempProduct.id,
@@ -140,7 +172,10 @@ export class ProductComponent {
     };
   }
 
-  // Carga la vista de edición para un producto específico
+  /**
+   * carga la vista de edición para un producto específico
+   * @param id 
+   */
   editViewProduct(id: number) {
     this.productForm.reset();
     this.viewForm = true;
@@ -148,18 +183,12 @@ export class ProductComponent {
     this.productForm.patchValue(this.dataTempProduct);
   }
 
-  // Elimina un producto con confirmación de sweetalert
-  deleteProduct(id: number) {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: "Esta acción eliminará el producto permanentemente. ¡No podrás revertirlo!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminarlo',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+  /**
+   * Elimina un producto con confirmación de sweetalert
+   * @param id 
+   */
+  deleteProduct(id: number): void {
+    this.notificationService.showDeleteConfirmation().then((result) => {
       if (result.isConfirmed) {
         this.notificationService.showLoading();
         this._productService.deleteProduct(id).subscribe({
@@ -171,11 +200,15 @@ export class ProductComponent {
             this.notificationService.showError('Tuvimos un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
           }
         });
+      } else {
+        console.log('Eliminación cancelada');
       }
     });
   }
 
-  // Vuelve a la vista anterior.
+  /**
+   * Vuelve a la vista anterior
+   */
   goBack() {
     this.viewForm = false;
   }

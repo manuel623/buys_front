@@ -36,8 +36,8 @@ export class BuyerComponent implements OnInit {
       second_name: [''],
       first_last_name: ['',],
       second_last_name: [''],
-      phone: [''],
-      email: ['', [Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', Validators.required]
     });
   }
 
@@ -49,12 +49,16 @@ export class BuyerComponent implements OnInit {
    * se obtiene los datos de los compradores y los asigna a la variable dataBuyer
    */
   getDataBuyer(): void {
+    this.loadingTable = true;
     this._buyerService.listBuyer().subscribe(
       (response: ApiResponse) => {
         this.dataBuyer = response.original.data;
         this.loadingTable = false;
       },
-      (error) => this.handleError(error)
+      (error) =>{
+        this.loadingTable = false;
+        this.notificationService.showError(error);
+      } 
     );
   }
 
@@ -92,13 +96,6 @@ export class BuyerComponent implements OnInit {
   }
 
   /**
-   * Maneja el error y muestra una notificación de error
-   */
-  private handleError(error: any): void {
-    this.notificationService.showError(error);
-  }
-
-  /**
    * maneja el estado de carga activando o desactivando payload
    */
   private handleLoadingState(isLoading: boolean): void {
@@ -121,7 +118,7 @@ export class BuyerComponent implements OnInit {
         },
         (error) => {
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
@@ -141,7 +138,7 @@ export class BuyerComponent implements OnInit {
         },
         (error) => {
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
@@ -164,27 +161,20 @@ export class BuyerComponent implements OnInit {
    * Elimina un comprador, pidiendo confirmación al usuario antes de proceder.
    */
   deleteBuyer(id: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará el registro permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminarlo',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    this.notificationService.showDeleteConfirmation().then((result) => {
       if (result.isConfirmed) {
         this.notificationService.showLoading();
-        this._buyerService.deleteBuyer(id).subscribe(
-          (response: ApiResponse) => {
+        this._buyerService.deleteBuyer(id).subscribe({
+          next: (response) => {
             this.getDataBuyer();
             this.notificationService.showSuccess(response.original.message);
           },
-          (error) => {
-            this.notificationService.showError('Error al eliminar el registro.');
+          error: (error) => {
+            this.notificationService.showError('Tuvimos un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
           }
-        );
+        } );
+      } else {
+        console.log('Eliminación cancelada');
       }
     });
   }

@@ -5,7 +5,6 @@ import { BuyerComponent } from './components/buyer/buyer.component';
 import { AuthGuard } from './guard/auth.guard';
 import { OrderComponent } from './components/order/order.component';
 import { ProductComponent } from './components/product/product.component';
-import { OrderDetailComponent } from './components/order-detail/order-detail.component';
 import { HomeComponent } from './components/home/home.component';
 
 export const routes: Routes = [
@@ -15,6 +14,5 @@ export const routes: Routes = [
     { path: 'user', component: UserComponent, canActivate: [AuthGuard], pathMatch: 'full' },
     { path: 'buyer', component: BuyerComponent, canActivate: [AuthGuard], pathMatch: 'full' },
     { path: 'order', component: OrderComponent, canActivate: [AuthGuard], pathMatch: 'full' },
-    { path: 'product', component: ProductComponent, canActivate: [AuthGuard], pathMatch: 'full' },
-    { path: 'order-detail', component: OrderDetailComponent, canActivate: [AuthGuard], pathMatch: 'full' },
+    { path: 'product', component: ProductComponent, canActivate: [AuthGuard], pathMatch: 'full' }
 ];

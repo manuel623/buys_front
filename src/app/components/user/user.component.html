@@ -57,7 +57,8 @@
         <h3 class="text-center text-2xl font-bold mb-6">Formulario de Usuario</h3>
 
         <div class="mb-5">
-            <label for="name" class="block font-medium mb-1">Nombre</label>
+            <label for="name" class="block font-medium mb-1">Nombre <span
+                class="text-red-400">*</span></label>
             <input type="text" formControlName="name" placeholder="Nombre del Usuario"
                 class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
                 [ngClass]="{'border-red-500': userForm.get('name')?.invalid && (userForm.get('name')?.touched || userForm.get('name')?.dirty)}">
@@ -66,7 +67,8 @@
         </div>
 
         <div class="mb-5">
-            <label for="email" class="block font-medium mb-1">Correo Electrónico</label>
+            <label for="email" class="block font-medium mb-1">Correo Electrónico <span
+                class="text-red-400">*</span></label>
             <input type="email" formControlName="email" placeholder="usuario@correo.com"
                 class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
                 [ngClass]="{'border-red-500': userForm.get('email')?.invalid && (userForm.get('email')?.touched || userForm.get('email')?.dirty)}">
@@ -75,7 +77,8 @@
         </div>
 
         <div class="mb-5">
-            <label for="password" class="block font-medium mb-1">Contraseña</label>
+            <label for="password" class="block font-medium mb-1">Contraseña <span
+                class="text-red-400">*</span></label>
             <input type="password" formControlName="password" placeholder="Contraseña"
                 class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
                 [ngClass]="{'border-red-500': userForm.get('password')?.invalid && (userForm.get('password')?.touched || userForm.get('password')?.dirty)}">

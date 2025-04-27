@@ -54,7 +54,7 @@ export class UserComponent {
       },
       (error) => {
         this.loadingTable = false;
-        this.handleError(error)
+        this.notificationService.showError(error);
       }
     );
   }
@@ -81,6 +81,8 @@ export class UserComponent {
 
   /**
    * maneja la respuesta de éxito y la notificación de éxito
+   * @param response 
+   * @param onSuccess 
    */
   private handleResponse(response: ApiResponse, onSuccess: () => void): void {
     if (response.original.success) {
@@ -90,13 +92,6 @@ export class UserComponent {
     } else {
       this.notificationService.showWarning('Error al procesar tu solicitud.');
     }
-  }
-
-  /**
-   * Maneja el error y muestra una notificación de error
-   */
-  private handleError(error: any): void {
-    this.notificationService.showError(error);
   }
 
   /**
@@ -125,7 +120,7 @@ export class UserComponent {
         (error) => {
           this.isSubmitting = false;
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
@@ -148,7 +143,7 @@ export class UserComponent {
         (error) => {
           this.isSubmitting = false;
           this.handleLoadingState(false);
-          this.handleError(error);
+          this.notificationService.showError(error);
         }
       );
     }
@@ -156,6 +151,7 @@ export class UserComponent {
 
   /**
    * asigna los datos de un usuario para editar el registro
+   * @param id 
    */
   editViewUser(id: number): void {
     this.userForm.reset();
@@ -169,35 +165,36 @@ export class UserComponent {
 
   /**
    * Elimina un usuario, pidiendo confirmación al usuario antes de proceder.
+   * @param id 
    */
   deleteUser(id: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará el registro permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminarlo',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+  
+    if (loggedInUser.id === id) {
+      this.notificationService.showError('No puedes eliminar tu propio usuario.');
+      return;
+    }
+    this.notificationService.showDeleteConfirmation().then((result) => {
       if (result.isConfirmed) {
         this.notificationService.showLoading();
-        this._userService.deleteUser(id).subscribe(
-          (response: ApiResponse) => {
+        this._userService.deleteUser(id).subscribe({
+          next: (response) => {
             this.getDataUser();
             this.notificationService.showSuccess(response.original.message);
           },
-          (error) => {
-            this.notificationService.showError('Error al eliminar el registro.');
+          error: (error) => {
+            this.notificationService.showError('Error. Por favor, inténtalo de nuevo.');
           }
-        );
+        });
+      } else {
+        console.log('Eliminación cancelada');
       }
     });
-  }
+  }  
 
   /**
    * Prepara los datos del usuario antes de enviarlos al backend
+   * @returns 
    */
   private prepareUserData(): IUser {
     return {

@@ -18,6 +18,11 @@ export class OrderDetailService {
     listOrderDetail(): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/orderDetail/listOrderDetail`, this.header.getHttpOptions());
     }
+
+    getOrderDetails(orderId: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/orderDetail/getOrderDetails/` + orderId , this.header.getHttpOptions());
+    }
+
     createOrderDetail(data: any): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/orderDetail/createOrderDetail`, data, this.header.getHttpOptions());
     }
