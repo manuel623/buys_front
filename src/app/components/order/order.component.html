@@ -34,7 +34,7 @@
                 <tr *ngFor="let item of dataOrder">
                     <td class="py-3 px-4">{{ item.payment_method }}</td>
                     <td class="py-3 px-4">{{ item.billing_date | date: 'shortDate' }}</td>
-                    <td class="py-3 px-4">{{ item.description }}</td>
+                    <td class="py-3 px-4">{{ item.description ? item.description : 'No aplica' }}</td>
                     <td class="py-3 px-4">${{ item.total | number: '1.2-2' }}</td>
                     <td class="py-3 px-4 space-x-2">
                         <button

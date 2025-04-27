@@ -287,7 +287,7 @@ export class OrderComponent {
     this.orderService.createOrder(orderPayload).subscribe(
       (orderRes: any) => {
         const orderId = orderRes.original.data.id;
-
+        let detailsCreated = 0;
         // se crea el detalle de orden por cada producto
         products.forEach((product: any, index: number) => {
           const detailPayload = {
@@ -303,7 +303,6 @@ export class OrderComponent {
 
           this.orderDetailService.createOrderDetail(detailPayload).subscribe(
             () => {
-              this.notificationService.showSuccess(`Detalle de orden ${index + 1} creado.`);
               const newStock = product.stock - product.quantity;
               this.productService.updateStock(product.productId, newStock).subscribe(
                 () => {
@@ -313,16 +312,18 @@ export class OrderComponent {
                   console.error('Error actualizando stock del producto');
                 }
               );
+              detailsCreated++;
+              if (detailsCreated === products.length) {
+                this.notificationService.showSuccess('Detalles de ordenes creados exitosamente.');
+                this.viewForm = false;
+                this.getOrders();
+              }
             },
             () => {
               this.notificationService.showError('Error al crear el detalle de la orden.');
             }
           );
         });
-
-        this.notificationService.showSuccess('Orden creada exitosamente.');
-        this.viewForm = false;
-        this.getOrders();
       },
       () => {
         this.notificationService.showError('Error al crear la orden.');
