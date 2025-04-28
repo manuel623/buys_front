@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
@@ -40,10 +40,9 @@ export class OrderComponent {
     private fb: FormBuilder,
     private orderService: OrderService,
     private notificationService: NotificationService,
-    private buyerService: BuyerService,
-    private productService: ProductService,
-    private orderDetailService: OrderDetailService,
-    private changeDetector: ChangeDetectorRef
+    private _buyerService: BuyerService,
+    private _productService: ProductService,
+    private _orderDetailService: OrderDetailService
   ) {
     this.buyerForm = this.fb.group({
       document: ['', Validators.required],
@@ -85,8 +84,11 @@ export class OrderComponent {
     });
   }
 
+  /**
+   * se obtiene los datos de los productos y los asigna a la variable products
+   */
   loadProducts() {
-    this.productService.listProduct().subscribe(res => {
+    this._productService.listProduct().subscribe(res => {
       this.products = res.original.data;
     });
   }
@@ -95,10 +97,16 @@ export class OrderComponent {
     return this.productForm.get('products') as FormArray;
   }
 
+  /**
+   * controla la vista del formulario
+   */
   viewFormCreate() {
     this.viewForm = true;
   }
 
+  /**
+   * regresa al paso 1 en la creacion de la orden
+   */
   goBack() {
     if (this.currentStep === 1) {
       this.viewForm = false;
@@ -107,11 +115,15 @@ export class OrderComponent {
     }
   }
 
+  /**
+   * avanza al paso 2 en la creacion de la orden
+   * @returns 
+   */
   nextStep() {
     if (this.buyerForm.invalid) return;
 
     const doc = this.buyerForm.value.document;
-    this.buyerService.getBuyerByDocument(doc).subscribe(client => {
+    this._buyerService.getBuyerByDocument(doc).subscribe(client => {
       if (client) {
         this.hideExtraFields = true;
         this.buyerForm.patchValue(client);
@@ -119,7 +131,7 @@ export class OrderComponent {
       } else {
         this.hideExtraFields = false;
         if (this.buyerForm.valid) {
-          this.buyerService.createBuyer(this.buyerForm.value).subscribe(newClient => {
+          this._buyerService.createBuyer(this.buyerForm.value).subscribe(newClient => {
             this.buyerForm.patchValue(newClient);
             this.currentStep++;
           });
@@ -128,11 +140,15 @@ export class OrderComponent {
     });
   }
 
+  /**
+   * funcion que valida si un comprador ya existe o no
+   * @returns 
+   */
   onDocumentBlur(): void {
     const doc = this.buyerForm.get('document')?.value;
     if (!doc) return;
     const payload = { document: doc };
-    this.buyerService.getBuyerByDocument(doc).subscribe(
+    this._buyerService.getBuyerByDocument(doc).subscribe(
       (res: any) => {
         if (res.original?.data) {
           this.buyerForm.patchValue(res.original.data);
@@ -148,6 +164,9 @@ export class OrderComponent {
     );
   }
 
+  /**
+   * funcion que agrega parcialmente un producto al crear una orden
+   */
   addProduct() {
     const productGroup = this.fb.group({
       productId: ['', Validators.required],
@@ -166,6 +185,10 @@ export class OrderComponent {
     return this.productForm.get('products') as FormArray;
   }
 
+  /**
+   * funcion que controla que orden se quiere actualizar para cargar los datos en el formulario
+   * @param id 
+   */
   editViewProduct(id: number) {
     this.orderForm.reset();
     this.viewEditForm = true;
@@ -173,6 +196,9 @@ export class OrderComponent {
     this.orderForm.patchValue(this.dataTempOrder);
   }
 
+  /**
+   * funcion que actualiza una orden de compra
+   */
   editOrder() {
     if (this.orderForm.valid) {
       this.loadingTable = true
@@ -209,9 +235,9 @@ export class OrderComponent {
   }
 
   /**
-     * Prepara los datos de la order antes de editarlos
-     * @returns 
-     */
+  * prepara los datos de la order antes de editarlos
+  * @returns 
+  */
   private prepareOrderData() {
     return {
       id: this.dataTempOrder.id,
@@ -222,7 +248,10 @@ export class OrderComponent {
     };
   }
 
-  // calcula el subtotal de un producto especfico
+  /**
+   * calcula el subtotal de un producto especfico
+   * @param productGroup 
+   */
   calculateSubTotal(productGroup: FormGroup): void {
     const quantity = productGroup.get('quantity')?.value;
     const unitValue = productGroup.get('unitValue')?.value;
@@ -231,7 +260,9 @@ export class OrderComponent {
     this.calculateTotal();
   }
 
-  // Calcular el valor total
+  /**
+   * calcular el valor total
+   */
   calculateTotal(): void {
     let total = 0;
     this.productControls.controls.forEach((control: any) => {
@@ -240,11 +271,20 @@ export class OrderComponent {
     this.orderForm.get('total')?.setValue(total);
   }
 
+  /**
+   * funcion que elimina el producto previamente seleccionado
+   * @param index 
+   */
   removeProduct(index: number) {
     this.productControls.removeAt(index);
     this.calculateSubtotal();
   }
 
+  /**
+   * funcion que va agrupando los productos seleccionados
+   * @param event 
+   * @param index 
+   */
   handleProductChange(event: any, index: number) {
     const productId = event.target.value;
     const selectedProduct = this.products.find(p => p.id === +productId);
@@ -260,6 +300,9 @@ export class OrderComponent {
     }
   }
 
+  /**
+   * funcion que calcula el subtotal de cada producto
+   */
   calculateSubtotal() {
     this.productControls.controls.forEach(group => {
       const unit = +group.get('unitValue')?.value || 0;
@@ -268,6 +311,10 @@ export class OrderComponent {
     });
   }
 
+  /**
+   * funcion que elimina una orden con previa confirmacion
+   * @param id 
+   */
   deleteOrder(id: number): void {
     this.notificationService.showDeleteConfirmation().then((result) => {
       if (result.isConfirmed) {
@@ -287,6 +334,10 @@ export class OrderComponent {
     });
   }
 
+  /**
+   * funcion que se ejcutar al crear orden
+   * @returns 
+   */
   submitOrder(): void {
     if (this.buyerForm.invalid || this.productForm.invalid || this.orderForm.invalid) {
       this.notificationService.showWarning('Por favor, complete todos los campos requeridos.');
@@ -310,16 +361,16 @@ export class OrderComponent {
    */
   private getOrCreateBuyer(buyerData: any): Promise<number> {
     return new Promise((resolve, reject) => {
-      this.buyerService.getBuyerByDocument(buyerData.document).subscribe(
+      this._buyerService.getBuyerByDocument(buyerData.document).subscribe(
         (res: any) => {
           if (res.original.data) {
             this.notificationService.showSuccess('Comprador encontrado.');
             resolve(res.original.data.id);
           } else {
-            this.buyerService.createBuyer(buyerData).subscribe(
+            this._buyerService.createBuyer(buyerData).subscribe(
               () => {
                 this.notificationService.showSuccess('Comprador creado exitosamente');
-                this.buyerService.getBuyerByDocument(buyerData.document).subscribe(
+                this._buyerService.getBuyerByDocument(buyerData.document).subscribe(
                   (resAgain: any) => {
                     if (resAgain.original?.data) {
                       this.notificationService.showSuccess('ID del comprador obtenido tras la creación');
@@ -341,7 +392,7 @@ export class OrderComponent {
   }
 
   /**
-   * Crea la orden y sus detalles asociados.
+   * funcion que crea la orden y sus detalles asociados.
    */
   private createOrderWithDetails(buyerId: number, orderData: any, products: any[]): void {
     this.viewForm = false;
@@ -367,10 +418,10 @@ export class OrderComponent {
             unit_price: product.unitValue,
             subtotal: product.subtotal
           };
-          this.orderDetailService.createOrderDetail(detailPayload).subscribe(
+          this._orderDetailService.createOrderDetail(detailPayload).subscribe(
             () => {
               const newStock = product.stock - product.quantity;
-              this.productService.updateStock(product.productId, newStock).subscribe(
+              this._productService.updateStock(product.productId, newStock).subscribe(
                 () => {
                   console.log(`Stock actualizado para producto ${product.productId}`);
                 },
@@ -397,6 +448,9 @@ export class OrderComponent {
     );
   }
 
+  /**
+   * funcion que resetea los formularios reactivos para evitrar bugs
+   */
   resetForms() {
     this.buyerForm.reset();
     this.productForm.reset();
@@ -404,12 +458,11 @@ export class OrderComponent {
     this.currentStep--;
   }
 
-  prevStep(): void {
-    if (this.currentStep === 2) {
-      this.currentStep = 1;
-    }
-  }
-
+  /**
+   * funcion que valida que la cantidad a comprar por producto sea menor o igual a su valor de stock
+   * @param index 
+   * @returns 
+   */
   validateQuantity(index: number): void {
     const group = this.productControls.at(index);
     if (!group) return;
@@ -424,6 +477,11 @@ export class OrderComponent {
     this.calculateSubtotal()
   }
 
+  /**
+   * actualiza los valores subtotal
+   * @param index 
+   * @returns 
+   */
   updateSubtotal(index: number): void {
     const group = this.productControls.at(index);
     if (!group) return;
@@ -438,7 +496,7 @@ export class OrderComponent {
    * @param orderId 
    */
   consultOrderDetail(orderId: number): void {
-    this.orderDetailService.getOrderDetails(orderId).subscribe(
+    this._orderDetailService.getOrderDetails(orderId).subscribe(
       (response: any) => {
         if (response.original.success) {
           this.viewOrderDetail = true
