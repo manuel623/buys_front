@@ -73,7 +73,6 @@ export class ProductComponent {
     this._productService.topPurchasedProducts().subscribe((response) => {
       this.topProducts = response.original.data
       this.loadingTable = false;
-      this.principalView = true;
     }, (error) => {
       this.notificationService.showError(error);
       this.loadingTable = false;
@@ -211,5 +210,10 @@ export class ProductComponent {
    */
   goBack() {
     this.viewForm = false;
+  }
+
+  returnView(){
+    this.principalView = true
+    this.getDataProduct()
   }
 }

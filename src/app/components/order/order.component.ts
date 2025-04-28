@@ -26,12 +26,13 @@ export class OrderComponent {
   public loadingTable: boolean = false;
   public viewFormEdit: boolean = false;
   public viewOrderDetail: boolean = false;
-  public dataOrder: any[] = [];
+  public viewEditForm: boolean = false;
   public products: any[] = [];
   public orderDetails: any[] = [];
   public buyerForm!: FormGroup;
   public productForm!: FormGroup;
   public orderForm !: FormGroup;
+  public dataOrder: Order[] = [];
   public dataTempOrder: Order = {} as Order;
   public minDate: string = new Date().toISOString().substring(0, 10);
 
@@ -62,7 +63,6 @@ export class OrderComponent {
       description: [''],
       payment_method: ['efectivo'],
       billing_date: [new Date().toISOString().substring(0, 10)],
-      discount: [0],
       total: [''],
     });
 
@@ -74,6 +74,9 @@ export class OrderComponent {
     this.addProduct();
   }
 
+  /**
+   * se obtiene los datos de las ordenes y los asigna a la variable dataOrder
+   */
   getOrders() {
     this.loadingTable = true;
     this.orderService.listOrder().subscribe(res => {
@@ -163,6 +166,62 @@ export class OrderComponent {
     return this.productForm.get('products') as FormArray;
   }
 
+  editViewProduct(id: number) {
+    this.orderForm.reset();
+    this.viewEditForm = true;
+    this.dataTempOrder = this.dataOrder.find((p: Order) => p.id === id) as Order;
+    this.orderForm.patchValue(this.dataTempOrder);
+  }
+
+  editOrder() {
+    if (this.orderForm.valid) {
+      this.loadingTable = true
+      const data = this.prepareOrderData();
+      this.orderService.editOrder(data, this.dataTempOrder.id).subscribe(
+        (response: any) => {
+          this.loadingTable = false
+          this.handleResponse(response, () => {
+            this.viewEditForm = false;
+          });
+        },
+        (error: any) => {
+          this.loadingTable = false
+
+          this.notificationService.showError(error);
+        }
+      );
+    }
+  }
+
+  /**
+   * maneja las respuestas
+   * @param response 
+   * @param onSuccess 
+   */
+  private handleResponse(response: any, onSuccess: () => void) {
+    if (response.original.success) {
+      this.getOrders();
+      this.notificationService.showSuccess(response.original.message);
+      onSuccess();
+    } else {
+      this.notificationService.showWarning('Tuvimos un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+    }
+  }
+
+  /**
+     * Prepara los datos de la order antes de editarlos
+     * @returns 
+     */
+  private prepareOrderData() {
+    return {
+      id: this.dataTempOrder.id,
+      payment_method: this.orderForm.get('payment_method')?.value,
+      description: this.orderForm.get('description')?.value,
+      billing_date: this.orderForm.get('billing_date')?.value,
+      total: this.orderForm.get('total')?.value,
+    };
+  }
+
   // calcula el subtotal de un producto especfico
   calculateSubTotal(productGroup: FormGroup): void {
     const quantity = productGroup.get('quantity')?.value;
@@ -226,7 +285,7 @@ export class OrderComponent {
         console.log('Eliminación cancelada');
       }
     });
-  } 
+  }
 
   submitOrder(): void {
     if (this.buyerForm.invalid || this.productForm.invalid || this.orderForm.invalid) {
@@ -291,7 +350,6 @@ export class OrderComponent {
       description: orderData.description,
       billing_date: orderData.billing_date,
       payment_method: orderData.payment_method,
-      has_discount: orderData.has_discount,
       total: orderData.total,
     };
 

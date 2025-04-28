@@ -12,11 +12,11 @@
 </div>
 
 <div class="max-w-6xl mx-auto my-10 px-4" *ngIf="!viewForm">
-    <h3 class="text-center text-xl font-bold mb-6">Órdenes Registradas</h3>
     <div class="flex justify-center items-center pt-4" *ngIf="loadingTable">
         <i class="fa-solid fa-spinner fa-spin fa-2xl text-blue-600"></i>
     </div>
-    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable && !viewOrderDetail">
+    <div class="overflow-x-auto shadow rounded-lg" *ngIf="!loadingTable && !viewOrderDetail && !viewEditForm">
+        <h3 class="text-center text-xl font-bold mb-6">Órdenes Registradas</h3>
         <table class="min-w-full divide-y divide-gray-200 text-center">
             <thead class="bg-blue-100">
                 <tr>
@@ -41,6 +41,11 @@
                             class="text-green-600 border border-green-500 hover:bg-green-100 px-3 py-1 rounded text-sm"
                             (click)="consultOrderDetail(item.id)">
                             <i class="fa-solid fa-circle-info mr-1"></i>Detalles
+                        </button>
+                        <button
+                            class="text-yellow-600 border border-yellow-400 hover:bg-yellow-100 px-3 py-1 rounded text-sm"
+                            (click)="editViewProduct(item.id)">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
                         </button>
                         <button class="text-red-600 border border-red-500 hover:bg-red-100 px-3 py-1 rounded text-sm"
                             (click)="deleteOrder(item.id)">
@@ -132,8 +137,66 @@
     </div>
 </div>
 
+<!-- flujo para actualizar una orden -->
+<div *ngIf="viewEditForm" class="max-w-2xl mx-auto px-4">
+    <form [formGroup]="orderForm" (ngSubmit)="editOrder()" class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-bold mb-6">Formulario de Orden</h3>
 
-<!-- Flujo para crear ordenes de compra -->
+        <div class="mb-5">
+            <label class="block font-medium mb-1">Medio de Pago</label>
+            <div class="border border-gray-200 rounded-lg flex items-center p-2">
+                <select formControlName="payment_method" class="w-full outline-none bg-transparent">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="nequi">Nequi</option>
+                    <option value="daviplata">Daviplata</option>
+                    <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                    <option value="tarjeta_debito">Tarjeta de Débito</option>
+                </select>
+                <i class="fas fa-chevron-down ml-2 pointer-events-none"></i>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <label class="block font-medium mb-1">Descripción</label>
+            <input formControlName="description" type="text" placeholder="Descripción de la Orden"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('description')?.invalid && orderForm.get('description')?.touched}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('description')?.errors?.['required']">
+                La descripción es requerida.
+            </p>
+        </div>
+
+        <div class="mb-5">
+            <label class="block font-medium mb-1">Fecha de Facturación</label>
+            <input formControlName="billing_date" type="date"
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('billing_date')?.invalid && orderForm.get('billing_date')?.touched}" [min]="minDate">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('billing_date')?.errors?.['required']">
+                La fecha de facturación es requerida.
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <label class="block font-medium mb-1">Total</label>
+            <input formControlName="total" type="number" placeholder="Total de la Orden" readonly
+                class="w-full border rounded px-4 py-2 focus:outline-none focus:ring"
+                [ngClass]="{'border-red-500': orderForm.get('total')?.invalid && orderForm.get('total')?.touched}">
+            <p class="text-red-500 text-sm mt-1" *ngIf="orderForm.get('total')?.errors?.['required']">
+                El total es requerido.
+            </p>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button" (click)="viewEditForm = false"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-5 rounded-lg">Volver</button>
+            <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded-lg disabled:opacity-50"
+                [disabled]="orderForm.invalid">Guardar</button>
+        </div>
+    </form>
+</div>
+
+<!-- flujo para crear ordenes de compra -->
 <div *ngIf="viewForm" class="mx-auto px-4">
     <div *ngIf="currentStep === 1">
         <form [formGroup]="buyerForm" class="bg-white p-6 rounded-lg shadow-md">

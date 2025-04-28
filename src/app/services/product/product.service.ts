@@ -20,7 +20,7 @@ export class ProductService {
     }
 
     topPurchasedProducts(): Observable<any> {
-        return this.http.get<any>(`${this.apiUrl}/product/listProduct`, this.header.getHttpOptions());
+        return this.http.get<any>(`${this.apiUrl}/product/topPurchasedProducts`, this.header.getHttpOptions());
     }
 
     createProduct(data: any): Observable<any> {
