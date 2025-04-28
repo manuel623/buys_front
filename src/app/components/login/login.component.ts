@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth/auth.service';
+import { NotificationService } from '../../services/notification/notificacion.service';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +22,8 @@ export class LoginComponent {
   constructor(
     private _router: Router,
     private fb: FormBuilder,
-    private authService: AuthService
+    private _authService: AuthService,
+    private _notificationService: NotificationService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -29,13 +31,16 @@ export class LoginComponent {
     });
   }
 
+  /**
+   * valida si el ingreso de sesion es correcto o no
+   */
   verificationLogin(): void {
     if (this.loginForm.valid) {
       this.activeButton = true;
       this.loading = true;
       const datos = this.loginForm.value;
 
-      this.authService.login({ email: datos.email, password: datos.password }).subscribe(
+      this._authService.login({ email: datos.email, password: datos.password }).subscribe(
         (response) => {
           localStorage.setItem('token', JSON.stringify(response.token));
           localStorage.setItem('user', JSON.stringify(response.user));
@@ -46,12 +51,7 @@ export class LoginComponent {
         (error) => {
           this.activeButton = false;
           this.loading = false;
-          Swal.fire({
-            title: 'Advertencia',
-            text: error.error.error,
-            icon: 'warning',
-            confirmButtonText: 'OK',
-          });
+          this._notificationService.showError(error.error.error);
         }
       );
     }

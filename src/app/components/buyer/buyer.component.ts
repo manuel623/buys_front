@@ -28,7 +28,7 @@ export class BuyerComponent implements OnInit {
   constructor(
     private _buyerService: BuyerService,
     private fb: FormBuilder,
-    private notificationService: NotificationService
+    private _notificationService: NotificationService
   ) {
     this.buyerForm = this.fb.group({
       document: ['', [Validators.required, Validators.minLength(5)]],
@@ -57,7 +57,7 @@ export class BuyerComponent implements OnInit {
       },
       (error) =>{
         this.loadingTable = false;
-        this.notificationService.showError(error);
+        this._notificationService.showError(error);
       } 
     );
   }
@@ -84,19 +84,22 @@ export class BuyerComponent implements OnInit {
 
   /**
    * maneja la respuesta de éxito y la notificación de éxito
+   * @param response 
+   * @param onSuccess 
    */
   private handleResponse(response: ApiResponse, onSuccess: () => void): void {
     if (response.original.success) {
       this.getDataBuyer();
-      this.notificationService.showSuccess(response.original.message);
+      this._notificationService.showSuccess(response.original.message);
       onSuccess();
     } else {
-      this.notificationService.showWarning('Error al procesar tu solicitud.');
+      this._notificationService.showWarning('Error al procesar tu solicitud.');
     }
   }
 
   /**
    * maneja el estado de carga activando o desactivando payload
+   * @param isLoading 
    */
   private handleLoadingState(isLoading: boolean): void {
     this.createBuyerButton = isLoading;
@@ -104,7 +107,7 @@ export class BuyerComponent implements OnInit {
   }
 
   /**
-   * Edita un comprador
+   * edita un comprador
    */
   editUser(): void {
     if (this.buyerForm.valid) {
@@ -118,14 +121,14 @@ export class BuyerComponent implements OnInit {
         },
         (error) => {
           this.handleLoadingState(false);
-          this.notificationService.showError(error);
+          this._notificationService.showError(error);
         }
       );
     }
   }
 
   /**
-   * Crea un nuevo comprador
+   * crea un nuevo comprador
    */
   createUser(): void {
     if (this.buyerForm.valid) {
@@ -138,7 +141,7 @@ export class BuyerComponent implements OnInit {
         },
         (error) => {
           this.handleLoadingState(false);
-          this.notificationService.showError(error);
+          this._notificationService.showError(error);
         }
       );
     }
@@ -146,6 +149,7 @@ export class BuyerComponent implements OnInit {
 
   /**
    * asigna los datos de un comprador para editar el registro
+   * @param id 
    */
   editViewBuyer(id: number): void {
     this.buyerForm.reset();
@@ -158,19 +162,20 @@ export class BuyerComponent implements OnInit {
   }
 
   /**
-   * Elimina un comprador, pidiendo confirmación al usuario antes de proceder.
+   * elimina un comprador, pidiendo confirmación al usuario antes de proceder
+   * @param id 
    */
   deleteBuyer(id: number): void {
-    this.notificationService.showDeleteConfirmation().then((result) => {
+    this._notificationService.showDeleteConfirmation().then((result) => {
       if (result.isConfirmed) {
-        this.notificationService.showLoading();
+        this._notificationService.showLoading();
         this._buyerService.deleteBuyer(id).subscribe({
           next: (response) => {
             this.getDataBuyer();
-            this.notificationService.showSuccess(response.original.message);
+            this._notificationService.showSuccess(response.original.message);
           },
           error: (error) => {
-            this.notificationService.showError('Tuvimos un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+            this._notificationService.showError('Tuvimos un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
           }
         } );
       } else {
@@ -180,7 +185,7 @@ export class BuyerComponent implements OnInit {
   }
 
   /**
-   * Prepara los datos del comprador antes de enviarlos al backend
+   * prepara los datos del comprador antes de enviarlos al backend
    */
   private prepareBuyerData(): Buyer {
     return {
@@ -196,7 +201,7 @@ export class BuyerComponent implements OnInit {
   }
 
   /**
-   * Regresa a la vista principal sin mostrar el formulario.
+   * regresa a la vista principal sin mostrar el formulario
    */
   goBack(): void {
     this.viewForm = false;
