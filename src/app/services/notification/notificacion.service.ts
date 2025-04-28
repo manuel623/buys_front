@@ -6,6 +6,9 @@ import Swal from 'sweetalert2';
 })
 export class NotificationService {
 
+  /**
+   * sweetalert para indicar carga en toda la pagina
+   */
   showLoading() {
     Swal.fire({
       title: 'Cargando...',
@@ -25,6 +28,10 @@ export class NotificationService {
     });
   }
 
+  /**
+   * sweetalert para indicar que una peticion fue exitosa al usuario
+   * @param message 
+   */
   showSuccess(message: string) {
     Swal.fire({
       title: '¡Éxito!',
@@ -34,6 +41,10 @@ export class NotificationService {
     });
   }
 
+  /**
+   * sweetalert utilizado para indicarle algo al usuario
+   * @param message 
+   */
   showInfo(message: string) {
     Swal.fire({
       title: 'Info!',
@@ -43,6 +54,10 @@ export class NotificationService {
     });
   }
 
+  /**
+   * sweetalert utilizado para mostrar un error al usuario
+   * @param message 
+   */
   showError(message: string) {
     Swal.fire({
       title: '¡Error!',
@@ -52,6 +67,10 @@ export class NotificationService {
     });
   }
 
+  /**
+   * sweetalert utilizado para mostrar una alerta al usuario
+   * @param message 
+   */
   showWarning(message: string) {
     Swal.fire({
       title: '¡Ups! Algo salió mal',
@@ -61,6 +80,10 @@ export class NotificationService {
     });
   }
 
+  /**
+   * sweetAlert que solicita una confirmacion previa para ejecutar una funcion en especifica
+   * @returns 
+   */
   showDeleteConfirmation() {
     return Swal.fire({
       title: '¿Estás seguro?',

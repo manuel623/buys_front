@@ -15,10 +15,21 @@ export class AuthService {
         private header: HeaderService
     ) { }
 
+    /**
+     * ejecuta endpoint de login
+     * @param credentials 
+     * @returns 
+     * @method post
+     */
     login(credentials: { email: string; password: string }): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/login`, credentials);
     }
 
+    /**
+     * ejecuta endpoint de cerrar sesion
+     * @returns 
+     * @method post
+     */
     logout(): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.header.getHttpOptions())
     }
