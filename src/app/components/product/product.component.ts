@@ -59,7 +59,7 @@ export class ProductComponent {
   }
 
   /**
-   * Muestra el formulario para crear un producto nuevo
+   * muestra el formulario para crear un producto nuevo
    */
   viewFormCreate() {
     this.productForm.reset();
@@ -67,6 +67,9 @@ export class ProductComponent {
     this.viewForm = true;
   }
 
+  /**
+   * consulta cuales son los 3 productos mas vendidos
+   */
   topPurchasedProducts() {
     this.loadingTable = true;
     this.principalView = false;
@@ -79,8 +82,9 @@ export class ProductComponent {
       this.principalView = true;
     });
   }
+
   /**
-   * Envia el formulario de acuerdo si se esta editando o creando un producto
+   * envia el formulario de acuerdo si se esta editando o creando un producto
    */
   public submitForm() {
     if (this.dataTempProduct && Object.keys(this.dataTempProduct).length > 0) {
@@ -115,7 +119,7 @@ export class ProductComponent {
   }
 
   /**
-   * Edita un producto existente
+   * edita un producto existente
    */
   editProduct() {
     if (this.productForm.valid) {
@@ -137,7 +141,7 @@ export class ProductComponent {
   }
 
   /**
-   * Crea un nuevo producto
+   * crea un nuevo producto
    */
   createProduct() {
     if (this.productForm.valid) {
@@ -158,7 +162,7 @@ export class ProductComponent {
   }
 
   /**
-   * Prepara los datos del producto antes de crearlo o editarlos
+   * prepara los datos del producto antes de crearlo o editarlos
    * @returns 
    */
   private prepareProductData() {
@@ -183,7 +187,7 @@ export class ProductComponent {
   }
 
   /**
-   * Elimina un producto con confirmación de sweetalert
+   * elimina un producto con previa confirmacion
    * @param id 
    */
   deleteProduct(id: number): void {
@@ -206,12 +210,15 @@ export class ProductComponent {
   }
 
   /**
-   * Vuelve a la vista anterior
+   * vuelve a la vista anterior
    */
   goBack() {
     this.viewForm = false;
   }
 
+  /**
+   * vuelve de top de productos a vista principal de productos 
+   */
   returnView(){
     this.principalView = true
     this.getDataProduct()

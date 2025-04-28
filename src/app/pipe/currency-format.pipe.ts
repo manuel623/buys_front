@@ -6,6 +6,11 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class CurrencyFormatPipe implements PipeTransform {
 
+  /**
+   * pipe para formatear campos de valor total con moneda
+   * @param value 
+   * @returns 
+   */
   transform(value: number | string): string {
     if (value === null || value === undefined || value === '') {
       return '';

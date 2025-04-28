@@ -20,7 +20,7 @@ export class NavbarComponent {
   ) { }
 
   /** 
-   * Cerrar sesión
+   * cierra sesión
    */
   logout() {
     this.activeButton = true

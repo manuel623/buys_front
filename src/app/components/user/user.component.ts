@@ -164,12 +164,13 @@ export class UserComponent {
   }
 
   /**
-   * Elimina un usuario, pidiendo confirmación al usuario antes de proceder.
+   * elimina un usuario con previa confirmacion del usuario
    * @param id 
    */
   deleteUser(id: number): void {
     const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
-  
+    
+    //valida que no sea el mismo ususario
     if (loggedInUser.id === id) {
       this.notificationService.showError('No puedes eliminar tu propio usuario.');
       return;
@@ -193,7 +194,7 @@ export class UserComponent {
   }  
 
   /**
-   * Prepara los datos del usuario antes de enviarlos al backend
+   * prepara los datos del usuario antes de enviarlos al backend
    * @returns 
    */
   private prepareUserData(): IUser {
@@ -206,7 +207,7 @@ export class UserComponent {
   }
 
   /**
-   * Regresa a la vista principal sin mostrar el formulario.
+   * regresa a la vista principal sin mostrar el formulario
    */
   goBack(): void {
     this.viewForm = false;
