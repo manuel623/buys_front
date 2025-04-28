@@ -14,7 +14,7 @@ Repositorio: https://github.com/manuel623/buys_front.git
 - **Control de versiones:** Git
 - **Administrador de versiones de Node:** NVM
 - **HTTP Client:** Angular HttpClient
-- **CSS Framework:** TailwindCSS (si aplica)
+- **CSS Framework:** TailwindCSS
 
 ---
 
